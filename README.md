@@ -49,6 +49,16 @@ The `exit` command causes the shell to exit. It returns an integer exit code. An
 
 ---
 
+## Stage 5: Echo Command
+
+The `echo` utility writes its arguments to standard output, followed by a `<newline>`. If there are no arguments, only the `<newline>` is written.
+
+### 📕 References
+
+- https://pubs.opengroup.org/onlinepubs/9699919799/utilities/echo.html
+
+---
+
 ## 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
