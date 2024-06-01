@@ -1,16 +1,20 @@
-#[allow(unused_imports)]
+// Library
 use std::io::{self, Write};
 
+// ----
+// MAIN
+// ----
+
+/// The main entry point of the application
 fn main() {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    println!("Logs from your program will appear here!");
+    // Print the prompt
+    print!("$ ");
 
-    // Uncomment this block to pass the first stage
-    // print!("$ ");
-    // io::stdout().flush().unwrap();
+    // Flush the output to the screen so the prompt is displayed.
+    // The `print!` macro (unlike `println!`) does not flush the output automatically.
+    io::stdout().flush().unwrap();
 
-    // Wait for user input
-    let stdin = io::stdin();
+    // Wait for user input and read it into a String variable.
     let mut input = String::new();
-    stdin.read_line(&mut input).unwrap();
+    io::stdin().read_line(&mut input).unwrap();
 }

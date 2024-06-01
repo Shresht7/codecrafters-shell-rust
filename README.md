@@ -18,6 +18,8 @@ _Add a description of your course here_
 
 ## Stage 1: Print a prompt
 
+We print a shell prompt (`$ `) and wait for the user's input.
+
 ---
 
 ## 📕 References
