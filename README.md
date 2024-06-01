@@ -22,6 +22,12 @@ We print a shell prompt (`$ `) and wait for the user's input.
 
 ---
 
+## Stage 2: Handle Missing Commands
+
+We handle the case where the user enters a command that doesn't exist (which right now, is every command!). We print an error message and continue to wait for the user's input instead of letting the shell crash.
+
+---
+
 ## 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
