@@ -1,4 +1,5 @@
 // Library
+use crate::commands;
 use std::io::{self, Write};
 
 /// Struct that encapsulates the shell functionality
@@ -51,7 +52,7 @@ impl Shell {
         if let Some(command) = args.get(0) {
             // Match on the command name
             match *command {
-                "error" => return Err(io::Error::new(io::ErrorKind::Other, "An error occurred")),
+                "exit" => commands::exit::execute(args),
                 x => println!("{}: command not found", x),
             };
         }
