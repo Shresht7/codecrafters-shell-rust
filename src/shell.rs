@@ -53,6 +53,7 @@ impl Shell {
             // Match on the command name
             match *command {
                 "exit" => commands::exit::execute(args),
+                "echo" => commands::echo::execute(args),
                 x => println!("{}: command not found", x),
             };
         }
