@@ -80,3 +80,50 @@ impl Shell {
         }
     }
 }
+
+// -----
+// TESTS
+// -----
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_input() {
+        let mut shell = Shell::default();
+        let input = "command arg1 arg2";
+        let actual = shell.parse_input(input);
+        let expected = vec!["command", "arg1", "arg2"];
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_parse_input_no_args() {
+        let mut shell = Shell::default();
+        let input = "command";
+        let actual = shell.parse_input(input);
+        let expected = vec!["command"];
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_parse_input_empty() {
+        let mut shell = Shell::default();
+        let input = "";
+        let actual = shell.parse_input(input);
+        let expected: Vec<&str> = vec![];
+        assert_eq!(actual, expected);
+    }
+
+    // TODO: Implement escaped quotes
+    #[test]
+    #[ignore = "Not implemented yet"]
+    fn test_parse_input_with_quoted_args() {
+        let mut shell = Shell::default();
+        let input = "command \"arg1 arg2\"";
+        let actual = shell.parse_input(input);
+        let expected = vec!["command", "arg1 arg2"];
+        assert_eq!(actual, expected);
+    }
+}
