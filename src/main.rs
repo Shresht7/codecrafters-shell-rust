@@ -1,5 +1,8 @@
+// Modules
+mod shell;
+
 // Library
-use std::io::{self, Write};
+use shell::Shell;
 
 // ----
 // MAIN
@@ -7,26 +10,11 @@ use std::io::{self, Write};
 
 /// The main entry point of the application
 fn main() {
-    // Print the prompt
-    print!("$ ");
+    // Initialize the Shell
+    let mut shell = Shell::default();
 
-    // Flush the output to the screen so the prompt is displayed.
-    // The `print!` macro (unlike `println!`) does not flush the output automatically.
-    io::stdout().flush().unwrap();
-
-    // Wait for user input and read it into a String variable.
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-
-    // Split the input into a vector
-    let args: Vec<&str> = input.trim().split_whitespace().collect();
-
-    // Extract the command name from the vector
-    let command = args.get(0);
-
-    // Act on the command-name
-    match command {
-        Some(x) => println!("{}: command not found", x),
-        None => println!("No command provided"),
+    // Start the Shell's Read-Eval-Print Loop (REPL)
+    if let Err(e) = shell.run() {
+        eprintln!("\u{001b}[31mError: {}\u{001b}[0m", e);
     }
 }
