@@ -46,12 +46,15 @@ impl Shell {
     /// Handles command execution
     fn execute_command(&mut self, args: Vec<&str>) {
         // Extract the command name from the vector
-        let command = args.get(0);
-        // Match on the command name
-        match command {
-            Some(x) => println!("{}: command not found", x),
-            None => println!("No command provided"),
+        if let Some(command) = args.get(0) {
+            // Match on the command name
+            match command {
+                x => println!("{}: command not found", x),
+            }
         }
+        // If no command is provided, continue as if nothing happened
+        // Since this is a shell repl, we don't want to error out if no command is provided
+        return; // Return and continue on
     }
 
     /// Handles the shell loop
