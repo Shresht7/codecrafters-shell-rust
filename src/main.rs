@@ -20,14 +20,8 @@ fn main() {
     let input = shell.read_input();
 
     // Split the input into a vector
-    let args: Vec<&str> = input.trim().split_whitespace().collect();
-
-    // Extract the command name from the vector
-    let command = args.get(0);
+    let args: Vec<&str> = shell.parse_input(&input);
 
     // Act on the command-name
-    match command {
-        Some(x) => println!("{}: command not found", x),
-        None => println!("No command provided"),
-    }
+    shell.execute_command(args);
 }

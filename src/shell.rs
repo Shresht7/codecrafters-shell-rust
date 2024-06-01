@@ -37,4 +37,20 @@ impl Shell {
         self.reader.read_line(&mut input).unwrap(); // Read the input into the buffer
         return input;
     }
+
+    /// Parses the input into a vector of arguments
+    pub fn parse_input<'a>(&mut self, input: &'a str) -> Vec<&'a str> {
+        input.trim().split_whitespace().collect()
+    }
+
+    /// Handles command execution
+    pub fn execute_command(&mut self, args: Vec<&str>) {
+        // Extract the command name from the vector
+        let command = args.get(0);
+        // Match on the command name
+        match command {
+            Some(x) => println!("{}: command not found", x),
+            None => println!("No command provided"),
+        }
+    }
 }
