@@ -26,6 +26,8 @@ We print a shell prompt (`$ `) and wait for the user's input.
 
 We handle the case where the user enters a command that doesn't exist (which right now, is every command!). We print an error message and continue to wait for the user's input instead of letting the shell crash.
 
+---
+
 ## Stage 3: REPL (Read-Eval-Print Loop)
 
 A REPL is an interactive loop that reads user input, evaluates it, prints the result, and then waits for the next input.
@@ -33,6 +35,17 @@ A REPL is an interactive loop that reads user input, evaluates it, prints the re
 ### 📕 References
 
 - https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop
+
+---
+
+## Stage 4: Exit Command
+
+The `exit` command causes the shell to exit. It returns an integer exit code. An exit code of `0` indicates success, and any other value indicates an error.
+
+### 📕 References
+
+- https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#exit
+- https://en.wikipedia.org/wiki/Exit_status
 
 ---
 
