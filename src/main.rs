@@ -7,12 +7,8 @@ use std::io::{self, Write};
 
 /// The main entry point of the application
 fn main() {
-    // Print the prompt
-    print!("$ ");
-
-    // Flush the output to the screen so the prompt is displayed.
-    // The `print!` macro (unlike `println!`) does not flush the output automatically.
-    io::stdout().flush().unwrap();
+    // Render the prompt to the screen
+    render_prompt("$ ");
 
     // Wait for user input and read it into a String variable.
     let mut input = String::new();
@@ -29,4 +25,14 @@ fn main() {
         Some(x) => println!("{}: command not found", x),
         None => println!("No command provided"),
     }
+}
+
+/// Renders the prompt to the screen
+fn render_prompt(str: &str) {
+    // Print the prompt
+    print!("{}", str);
+
+    // Flush the output to the screen so the prompt is displayed.
+    // The `print!` macro (unlike `println!`) does not flush the output automatically.
+    io::stdout().flush().unwrap();
 }
