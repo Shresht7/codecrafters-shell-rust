@@ -53,4 +53,24 @@ impl Shell {
             None => println!("No command provided"),
         }
     }
+
+    /// Handles the shell loop
+    /// The shell will start a REPL (Read-Eval-Print Loop)
+    /// that will keep reading the input and processing commands
+    /// until the user exits the shell.
+    pub fn run(&mut self) {
+        loop {
+            // Render the prompt to the screen
+            self.render_prompt("$ ");
+
+            // Wait for user input and read it into a variable
+            let input = self.read_input();
+
+            // Split the input into a vector
+            let args: Vec<&str> = self.parse_input(&input);
+
+            // Act on the command-name
+            self.execute_command(args);
+        }
+    }
 }
