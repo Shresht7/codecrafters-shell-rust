@@ -26,6 +26,14 @@ We print a shell prompt (`$ `) and wait for the user's input.
 
 We handle the case where the user enters a command that doesn't exist (which right now, is every command!). We print an error message and continue to wait for the user's input instead of letting the shell crash.
 
+## Stage 3: REPL (Read-Eval-Print Loop)
+
+A REPL is an interactive loop that reads user input, evaluates it, prints the result, and then waits for the next input.
+
+### 📕 References
+
+- https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop
+
 ---
 
 ## 📕 References
