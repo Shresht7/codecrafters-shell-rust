@@ -49,9 +49,9 @@ impl super::ExecutableCommand for Type {
                 Ok(super::Command::Builtin(_)) => {
                     println!("{} is a shell builtin", arg);
                 }
-                // Ok(super::Command::Program) => {
-                //     println!("{} is an external program", arg);
-                // }
+                Ok(super::Command::Program(path)) => {
+                    println!("{} is {}", arg, path);
+                }
                 Ok(super::Command::Unknown) => {
                     println!("{} not found", arg);
                 }

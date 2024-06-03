@@ -1,3 +1,6 @@
+// Library
+use crate::helpers;
+
 // Modules
 mod echo;
 use echo::Echo;
@@ -26,7 +29,7 @@ pub enum Command {
     /// A built-in command in the shell
     Builtin(Builtin),
     /// An external program on the system (usually derived from the PATH environment variable)
-    // Program,
+    Program(String),
     /// An unknown command. The command is not recognized by the shell
     Unknown,
 }
@@ -37,7 +40,7 @@ impl Command {
     pub fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
         match self {
             Command::Builtin(builtin) => builtin.execute(args),
-            // Command::Program => todo!("Implement Program Execution"),
+            Command::Program(_path) => todo!("Implement Program Execution"),
             Command::Unknown => Unknown.execute(args),
         }
     }
@@ -50,6 +53,8 @@ impl std::str::FromStr for Command {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Ok(builtin) = Builtin::from_str(s) {
             Ok(Command::Builtin(builtin))
+        } else if helpers::path::find_executable(s).is_some() {
+            Ok(Command::Program(s.to_string()))
         } else {
             Ok(Command::Unknown)
         }
