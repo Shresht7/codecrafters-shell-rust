@@ -10,25 +10,28 @@
 /// ```sh
 /// $ exit 0
 /// ```
-pub struct Exit {
-    /// The name of the command
-    name: String,
-    /// A brief description of the command
-    description: String,
-    /// The instructions on how to use the command
-    usage: String,
-}
+pub struct Exit;
 
-// Implement the `Default` trait for the `Exit` struct
-impl Default for Exit {
-    fn default() -> Self {
-        Exit {
-            name: String::from("exit"),
-            description: String::from("Exit the shell with a status code"),
-            usage: String::from("exit [exit_code]"),
-        }
-    }
-}
+// note: commenting this out because warnings make the code-crafters tests fail
+// pub struct Exit {
+//     /// The name of the command
+//     name: String,
+//     /// A brief description of the command
+//     description: String,
+//     /// The instructions on how to use the command
+//     usage: String,
+// }
+
+// // Implement the `Default` trait for the `Exit` struct
+// impl Default for Exit {
+//     fn default() -> Self {
+//         Exit {
+//             name: String::from("exit"),
+//             description: String::from("Exit the shell with a status code"),
+//             usage: String::from("exit [exit_code]"),
+//         }
+//     }
+// }
 
 // Implement the `ExecutableCommand` trait for the `Exit` struct.
 impl super::ExecutableCommand for Exit {

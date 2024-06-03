@@ -5,25 +5,28 @@
 /// # The `type` command.
 /// This command will print the type of the given argument.
 /// This can be used to determine if the argument is a built-in command, an alias, or an external program.
-pub struct Type {
-    /// The name of the command
-    name: String,
-    /// A brief description of the command
-    description: String,
-    /// The instructions on how to use the command
-    usage: String,
-}
+pub struct Type;
 
-// Implement the `Default` trait for the `Type` struct
-impl Default for Type {
-    fn default() -> Self {
-        Type {
-            name: String::from("type"),
-            description: String::from("Print the type of the given argument"),
-            usage: String::from("type [argument]"),
-        }
-    }
-}
+// note: commenting this out because warnings make the code-crafters tests fail
+// pub struct Type {
+//     /// The name of the command
+//     name: String,
+//     /// A brief description of the command
+//     description: String,
+//     /// The instructions on how to use the command
+//     usage: String,
+// }
+
+// // Implement the `Default` trait for the `Type` struct
+// impl Default for Type {
+//     fn default() -> Self {
+//         Type {
+//             name: String::from("type"),
+//             description: String::from("Print the type of the given argument"),
+//             usage: String::from("type [argument]"),
+//         }
+//     }
+// }
 
 // Implement the `ExecutableCommand` trait for the `Type` struct.
 impl super::ExecutableCommand for Type {
@@ -46,9 +49,9 @@ impl super::ExecutableCommand for Type {
                 Ok(super::Command::Builtin(_)) => {
                     println!("{} is a shell builtin", arg);
                 }
-                Ok(super::Command::Program) => {
-                    println!("{} is an external program", arg);
-                }
+                // Ok(super::Command::Program) => {
+                //     println!("{} is an external program", arg);
+                // }
                 Ok(super::Command::Unknown) => {
                     println!("{} not found", arg);
                 }

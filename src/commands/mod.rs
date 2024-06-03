@@ -26,7 +26,7 @@ pub enum Command {
     /// A built-in command in the shell
     Builtin(Builtin),
     /// An external program on the system (usually derived from the PATH environment variable)
-    Program,
+    // Program,
     /// An unknown command. The command is not recognized by the shell
     Unknown,
 }
@@ -37,7 +37,7 @@ impl Command {
     pub fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
         match self {
             Command::Builtin(builtin) => builtin.execute(args),
-            Command::Program => todo!("Implement Program Execution"),
+            // Command::Program => todo!("Implement Program Execution"),
             Command::Unknown => Unknown.execute(args),
         }
     }
@@ -85,9 +85,9 @@ impl std::str::FromStr for Builtin {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "echo" => Ok(Builtin::Echo(Echo::default())),
-            "exit" => Ok(Builtin::Exit(Exit::default())),
-            "type" => Ok(Builtin::Type(Type::default())),
+            "echo" => Ok(Builtin::Echo(Echo)),
+            "exit" => Ok(Builtin::Exit(Exit)),
+            "type" => Ok(Builtin::Type(Type)),
             _ => Err(()),
         }
     }
