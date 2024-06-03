@@ -82,6 +82,12 @@ Extend the `type` builtin command to identify executable programs (using the `PA
 
 ---
 
+## Stage 8: Run External Programs
+
+Implement the ability to run external programs. The shell should be able to run any program that is in the `PATH` environment variable. The arguments are passed to the program.
+
+---
+
 ## 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
