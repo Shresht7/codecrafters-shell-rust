@@ -5,6 +5,8 @@ mod exit;
 use exit::Exit;
 mod unknown;
 use unknown::Unknown;
+mod r#type;
+use r#type::Type;
 
 // --------
 // COMMANDS
@@ -62,6 +64,7 @@ impl std::str::FromStr for Command {
 pub enum Builtin {
     Echo(Echo),
     Exit(Exit),
+    Type(Type),
 }
 
 // Implement the Command trait for the Builtin commands
@@ -69,8 +72,9 @@ impl ExecutableCommand for Builtin {
     /// Execute the built-in command
     fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
         match self {
-            Builtin::Echo(echo) => echo.execute(args),
-            Builtin::Exit(exit) => exit.execute(args),
+            Builtin::Echo(cmd) => cmd.execute(args),
+            Builtin::Exit(cmd) => cmd.execute(args),
+            Builtin::Type(cmd) => cmd.execute(args),
         }
     }
 }
@@ -83,6 +87,7 @@ impl std::str::FromStr for Builtin {
         match s {
             "echo" => Ok(Builtin::Echo(Echo::default())),
             "exit" => Ok(Builtin::Exit(Exit::default())),
+            "type" => Ok(Builtin::Type(Type::default())),
             _ => Err(()),
         }
     }
