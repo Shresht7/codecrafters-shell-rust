@@ -10,6 +10,8 @@ mod unknown;
 use unknown::Unknown;
 mod r#type;
 use r#type::Type;
+mod program;
+use program::Program;
 
 // --------
 // COMMANDS
@@ -29,7 +31,7 @@ pub enum Command {
     /// A built-in command in the shell
     Builtin(Builtin),
     /// An external program on the system (usually derived from the PATH environment variable)
-    Program(String),
+    Program(Program),
     /// An unknown command. The command is not recognized by the shell
     Unknown,
 }
@@ -40,7 +42,7 @@ impl Command {
     pub fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
         match self {
             Command::Builtin(builtin) => builtin.execute(args),
-            Command::Program(_path) => todo!("Implement Program Execution"),
+            Command::Program(path) => path.execute(args),
             Command::Unknown => Unknown.execute(args),
         }
     }
@@ -54,7 +56,7 @@ impl std::str::FromStr for Command {
         if let Ok(builtin) = Builtin::from_str(s) {
             Ok(Command::Builtin(builtin))
         } else if let Some(path) = helpers::path::find_executable(s) {
-            Ok(Command::Program(path))
+            Ok(Command::Program(Program::new(path)))
         } else {
             Ok(Command::Unknown)
         }
