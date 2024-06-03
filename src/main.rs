@@ -1,5 +1,6 @@
 // Modules
 mod commands;
+mod helpers;
 mod shell;
 
 // Library
