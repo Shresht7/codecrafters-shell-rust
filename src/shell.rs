@@ -1,5 +1,5 @@
 // Library
-use crate::commands;
+use crate::commands::Command;
 use std::io::{self, Write};
 
 /// Struct that encapsulates the shell functionality
@@ -50,12 +50,10 @@ impl Shell {
     fn execute_command(&mut self, args: Vec<&str>) -> io::Result<()> {
         // Extract the command name from the vector
         if let Some(command) = args.get(0) {
-            // Match on the command name
-            match *command {
-                "exit" => commands::exit::execute(args),
-                "echo" => commands::echo::execute(args),
-                x => println!("{}: command not found", x),
-            };
+            // Try to parse the command into a Command enum
+            if let Ok(cmd) = command.parse::<Command>() {
+                cmd.execute(args)?; // Execute the command
+            }
         }
         // If no command is provided, continue as if nothing happened
         // Since this is a shell repl, we don't want to error out if no command is provided
