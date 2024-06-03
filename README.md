@@ -88,6 +88,17 @@ Implement the ability to run external programs. The shell should be able to run 
 
 ---
 
+## Stage 9: PWD Command
+
+The `pwd` utility writes the absolute pathname of the current working directory to the standard output.
+
+### 📕 References
+
+- https://en.wikipedia.org/wiki/Pwd
+- https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html
+
+---
+
 ## 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
