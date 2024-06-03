@@ -32,7 +32,9 @@ impl super::ExecutableCommand for Program {
     /// Execute the program.
     fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
         // Execute the program with the given arguments
-        let output = std::process::Command::new(&self.path).args(args).output()?;
+        let output = std::process::Command::new(&self.path)
+            .args(&args[1..])
+            .output()?;
 
         // Write the output to the standard output
         std::io::stdout().write_all(&output.stdout)?;
