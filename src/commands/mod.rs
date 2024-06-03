@@ -53,8 +53,8 @@ impl std::str::FromStr for Command {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Ok(builtin) = Builtin::from_str(s) {
             Ok(Command::Builtin(builtin))
-        } else if helpers::path::find_executable(s).is_some() {
-            Ok(Command::Program(s.to_string()))
+        } else if let Some(path) = helpers::path::find_executable(s) {
+            Ok(Command::Program(path))
         } else {
             Ok(Command::Unknown)
         }

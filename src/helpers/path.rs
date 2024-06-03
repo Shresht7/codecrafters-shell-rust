@@ -6,7 +6,7 @@ use std::{env, path::PathBuf};
 // -------------------------
 
 /// Find an executable in the `PATH` environment variable.
-pub fn find_executable(name: &str) -> Option<PathBuf> {
+pub fn find_executable(name: &str) -> Option<String> {
     // Get the `PATH` environment variable
     let path = env::var("PATH").unwrap_or_default();
 
@@ -17,7 +17,12 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
     for path in paths {
         let executable = path.join(name);
         if executable.exists() {
-            return Some(executable);
+            if let Some(executable) = executable.to_str() {
+                return Some(executable.to_owned()); // Return the executable path
+            } else {
+                eprintln!("Failed to convert an executable path to a string");
+                return None;
+            }
         }
     }
 
