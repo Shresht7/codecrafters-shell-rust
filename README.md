@@ -59,6 +59,35 @@ The `echo` utility writes its arguments to standard output, followed by a `<newl
 
 ---
 
+## Stage 6: Type Command
+
+The `type` builtin command is used to identify how a command name is interpreted by the shell. It returns whether the command is a shell builtin or an unknown command.
+
+### 📕 References
+
+- https://pubs.opengroup.org/onlinepubs/9699919799/utilities/type.html
+
+---
+
+## Stage 7: Type Command: Executables
+
+Extend the `type` builtin command to identify executable programs (using the `PATH` environment variable). The `type` builtin should search the [`PATH`][PATH] for the command name and print the path to the executable if found.
+
+> [!NOTE]
+> [`PATH`][PATH] is an environment-variable that specifies the set of directories where executable programs are located.
+
+### 📕 References
+
+- [Wikipedia: PATH (variable)][PATH]
+
+---
+
 ## 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
+
+<!-- ----- -->
+<!-- LINKS -->
+<!-- ----- -->
+
+[PATH]: https://en.wikipedia.org/wiki/PATH_(variable)
