@@ -99,9 +99,16 @@ The `pwd` utility writes the absolute pathname of the current working directory 
 
 ---
 
-## Stage 10: CD Command
+## Stage 10: CD Command (Absolute Paths)
 
 The `cd` utility changes the current working directory to the directory specified by the `PATH` argument. This step only deals with absolute paths.
+
+---
+
+## Stage 11: CD Command (Relative Paths)
+
+Extend the `cd` utility to handle relative paths. The `cd` utility changes the current working directory to the directory specified by the `PATH` argument.
+e.g. `cd ./dir` and `cd ..`
 
 ---
 
