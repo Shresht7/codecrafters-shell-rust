@@ -30,8 +30,8 @@ impl super::ExecutableCommand for CD {
         };
 
         // Change the current working directory
-        if let Err(e) = std::env::set_current_dir(path) {
-            eprintln!("cd error: {}", e);
+        if let Err(_) = std::env::set_current_dir(path) {
+            eprintln!("{}: No such file or directory", path.display());
         }
 
         Ok(())
