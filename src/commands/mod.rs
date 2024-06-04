@@ -14,6 +14,8 @@ mod program;
 use program::Program;
 mod pwd;
 use pwd::PWD;
+mod cd;
+use cd::CD;
 
 // --------
 // COMMANDS
@@ -75,6 +77,7 @@ pub enum Builtin {
     Exit(Exit),
     Type(Type),
     PWD(PWD),
+    CD(CD),
 }
 
 // Implement the Command trait for the Builtin commands
@@ -86,6 +89,7 @@ impl ExecutableCommand for Builtin {
             Builtin::Exit(cmd) => cmd.execute(args),
             Builtin::Type(cmd) => cmd.execute(args),
             Builtin::PWD(cmd) => cmd.execute(args),
+            Builtin::CD(cmd) => cmd.execute(args),
         }
     }
 }
@@ -100,6 +104,7 @@ impl std::str::FromStr for Builtin {
             "exit" => Ok(Builtin::Exit(Exit)),
             "type" => Ok(Builtin::Type(Type)),
             "pwd" => Ok(Builtin::PWD(PWD)),
+            "cd" => Ok(Builtin::CD(CD)),
             _ => Err(()),
         }
     }
