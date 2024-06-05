@@ -112,6 +112,12 @@ e.g. `cd ./dir` and `cd ..`
 
 ---
 
+## Stage 12: CD Command (Home Directory)
+
+The `~` character is a shorthand for the home directory. Extend the `cd` utility to handle the `~` character.
+
+---
+
 ## 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
