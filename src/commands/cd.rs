@@ -1,3 +1,7 @@
+// Library
+use crate::helpers;
+use std::path::PathBuf;
+
 // ----------------
 // CHANGE DIRECTORY
 // ----------------
@@ -22,7 +26,15 @@ impl super::ExecutableCommand for CD {
     fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
         // Get the path from the arguments
         let path = match args.get(1) {
-            Some(path) => std::path::Path::new(path),
+            Some(arg) => {
+                if arg.starts_with("~") {
+                    let home_path = helpers::home::get().expect("cd: HOME path not found");
+                    let path = PathBuf::from(arg).components().skip(1).collect::<PathBuf>();
+                    home_path.join(path)
+                } else {
+                    PathBuf::from(arg)
+                }
+            }
             None => {
                 eprintln!("cd: missing argument");
                 return Ok(());
@@ -30,7 +42,7 @@ impl super::ExecutableCommand for CD {
         };
 
         // Change the current working directory
-        if let Err(_) = std::env::set_current_dir(path) {
+        if let Err(_) = std::env::set_current_dir(&path) {
             eprintln!("{}: No such file or directory", path.display());
         }
 
