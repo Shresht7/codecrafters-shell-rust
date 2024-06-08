@@ -8,7 +8,6 @@ pub struct Shell {
     reader: io::Stdin,
     /// The writer to write output to
     writer: io::Stdout,
-    // TODO: Track the working directory here
 }
 
 // Default implementation for the Shell struct
