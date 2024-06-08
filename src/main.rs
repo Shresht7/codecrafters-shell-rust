@@ -4,6 +4,7 @@ mod helpers;
 mod shell;
 
 // Library
+use helpers::ansi::Colorable;
 use shell::Shell;
 
 // ----
@@ -17,6 +18,6 @@ fn main() {
 
     // Start the Shell's Read-Eval-Print Loop (REPL)
     if let Err(e) = shell.run() {
-        eprintln!("\u{001b}[31mError: {}\u{001b}[0m", e);
+        eprintln!("Error: {}", e.red());
     }
 }
