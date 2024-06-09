@@ -12,26 +12,23 @@
 /// ```
 pub struct Exit;
 
-// note: commenting this out because warnings make the code-crafters tests fail
-// pub struct Exit {
-//     /// The name of the command
-//     name: String,
-//     /// A brief description of the command
-//     description: String,
-//     /// The instructions on how to use the command
-//     usage: String,
-// }
+// Implement the `CommandInfo` trait for the `Exit` struct.
+impl super::CommandInfo for Exit {
+    /// Get the name of the command.
+    fn name(&self) -> String {
+        String::from("exit")
+    }
 
-// // Implement the `Default` trait for the `Exit` struct
-// impl Default for Exit {
-//     fn default() -> Self {
-//         Exit {
-//             name: String::from("exit"),
-//             description: String::from("Exit the shell with a status code"),
-//             usage: String::from("exit [exit_code]"),
-//         }
-//     }
-// }
+    /// Get the description of the command.
+    fn description(&self) -> String {
+        String::from("Exit the shell with a status code")
+    }
+
+    /// Get the usage of the command.
+    fn usage(&self) -> String {
+        String::from("exit [status_code]")
+    }
+}
 
 // Implement the `ExecutableCommand` trait for the `Exit` struct.
 impl super::ExecutableCommand for Exit {

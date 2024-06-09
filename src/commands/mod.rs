@@ -30,6 +30,14 @@ pub trait ExecutableCommand {
     fn execute(&self, args: Vec<&str>) -> std::io::Result<()>;
 }
 
+/// A trait that defines the information about a command.
+/// This includes the name, description, and usage of the command.
+pub trait CommandInfo {
+    fn name(&self) -> String;
+    fn description(&self) -> String;
+    fn usage(&self) -> String;
+}
+
 /// The kind of command.
 pub enum Command {
     /// A built-in command in the shell

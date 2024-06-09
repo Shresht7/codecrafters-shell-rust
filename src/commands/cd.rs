@@ -16,6 +16,24 @@ use std::path::PathBuf;
 /// ```
 pub struct CD;
 
+// Implement the `CommandInfo` trait for the `CD` struct.
+impl super::CommandInfo for CD {
+    /// Get the name of the command.
+    fn name(&self) -> String {
+        String::from("cd")
+    }
+
+    /// Get the description of the command.
+    fn description(&self) -> String {
+        String::from("Change the current working directory")
+    }
+
+    /// Get the usage of the command.
+    fn usage(&self) -> String {
+        String::from("cd [path]")
+    }
+}
+
 // Implement the `ExecutableCommand` trait for the `CD` struct.
 impl super::ExecutableCommand for CD {
     /// Execute the `cd` command.

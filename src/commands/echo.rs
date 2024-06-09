@@ -15,26 +15,23 @@
 /// ```
 pub struct Echo;
 
-// note: commenting this out because warnings make the code-crafters tests fail
-// pub struct Echo {
-//     /// The name of the command
-//     name: String,
-//     /// A brief description of the command
-//     description: String,
-//     /// The instructions on how to use the command
-//     usage: String,
-// }
+// Implement the `CommandInfo` trait for the `Echo` struct.
+impl super::CommandInfo for Echo {
+    /// Get the name of the command.
+    fn name(&self) -> String {
+        String::from("echo")
+    }
 
-// // Implement the `Default` trait for the `Echo` struct
-// impl Default for Echo {
-//     fn default() -> Self {
-//         Echo {
-//             name: String::from("echo"),
-//             description: String::from("Print the given arguments to the screen"),
-//             usage: String::from("echo [arguments...]"),
-//         }
-//     }
-// }
+    /// Get the description of the command.
+    fn description(&self) -> String {
+        String::from("Print the given arguments to the screen")
+    }
+
+    /// Get the usage of the command.
+    fn usage(&self) -> String {
+        String::from("echo [arguments...]")
+    }
+}
 
 // Implement the `ExecutableCommand` trait for the `Echo` struct.
 impl super::ExecutableCommand for Echo {
