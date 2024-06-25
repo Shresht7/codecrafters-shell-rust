@@ -49,7 +49,7 @@ impl super::ExecutableCommand for Type {
                     println!("{} is {}", arg, path);
                 }
                 Ok(super::Command::Unknown) => {
-                    println!("{} not found", arg);
+                    println!("{}: not found", arg);
                 }
                 Err(_) => {
                     println!("{} is not a valid command", arg);
