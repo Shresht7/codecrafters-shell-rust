@@ -15,14 +15,15 @@ pub fn find_executable(name: &str) -> Option<String> {
 
     // Iterate over the paths and return the first executable found
     for path in paths {
+        // Check for name executable in each path
         let executable = path.join(name);
         if executable.exists() {
-            if let Some(executable) = executable.to_str() {
-                return Some(executable.to_owned()); // Return the executable path
-            } else {
-                eprintln!("Failed to convert an executable path to a string");
-                return None;
-            }
+            return Some(executable.to_str().unwrap().to_owned());
+        }
+        // Check name.exe (for windows) while we are at it
+        let executable = path.join(format!("{}.exe", name));
+        if executable.exists() {
+            return Some(executable.to_str().unwrap().to_owned());
         }
     }
 
