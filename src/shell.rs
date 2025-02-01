@@ -54,11 +54,13 @@ impl Shell {
                     in_quotes = !in_quotes;
                 }
                 ' ' => {
-                    if !in_quotes {
-                        args.push(word.clone());
-                        word.clear();
-                    } else {
-                        word.push(' ');
+                    if !word.is_empty() {
+                        if !in_quotes {
+                            args.push(word.clone());
+                            word.clear();
+                        } else {
+                            word.push(' ');
+                        }
                     }
                 }
                 ch => word.push(ch),
