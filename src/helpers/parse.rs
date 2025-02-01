@@ -27,6 +27,8 @@ pub fn input(input: &str) -> Vec<String> {
                     if let Some(c) = chars.next() {
                         word.push(c);
                     }
+                } else {
+                    word.push('\\');
                 }
             }
             ' ' => {
