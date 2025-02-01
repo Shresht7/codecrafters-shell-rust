@@ -1,64 +1,82 @@
-/// Parses the input into a vector of arguments
-pub fn input(input: &str) -> Vec<String> {
-    let mut args = Vec::new(); // Vector to store the resulting args
+pub struct Parser {
+    word: String,
+    in_single_quotes: bool,
+    in_double_quotes: bool,
+}
 
-    let mut word = String::new(); // Bucket to store the current word
-    let mut in_single_quotes = false; // Boolean indicating whether we are currently in a single-quoted string
-    let mut in_double_quotes = false; // Boolean indicating whether we are currently in a double-quoted string
-    let mut chars = input.trim().chars().peekable(); // Iterator to walk over
-    while let Some(ch) = chars.next() {
-        match ch {
-            '\'' => {
-                if !in_double_quotes {
-                    in_single_quotes = !in_single_quotes;
-                } else {
-                    word.push(ch);
-                }
-            }
-            '"' => {
-                if !in_single_quotes {
-                    in_double_quotes = !in_double_quotes;
-                } else {
-                    word.push(ch);
-                }
-            }
-            '\\' => {
-                if in_single_quotes {
-                    word.push('\\');
-                } else if in_double_quotes {
-                    if let Some(c) = chars.peek() {
-                        if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
-                            word.push(chars.next().unwrap());
-                        } else {
-                            word.push(c.clone());
-                        }
-                    }
-                } else if !in_single_quotes && !in_double_quotes {
-                    if let Some(c) = chars.next() {
-                        word.push(c);
-                    }
-                } else {
-                    word.push('\\');
-                }
-            }
-            ' ' => {
-                if !word.is_empty() {
-                    if !in_single_quotes && !in_double_quotes {
-                        args.push(word.clone());
-                        word.clear();
-                    } else {
-                        word.push(' ');
-                    }
-                }
-            }
-            ch => word.push(ch),
+impl Parser {
+    pub fn new() -> Parser {
+        Parser {
+            word: String::new(),
+            in_single_quotes: false,
+            in_double_quotes: false,
         }
     }
-    if !word.is_empty() {
-        args.push(word.clone()); // Push any remaining word after the loop onto args
+
+    pub fn parse(input: &str) -> Vec<String> {
+        let mut p = Parser::new();
+        p._parse(input)
     }
 
-    args
+    /// Parses the input into a vector of arguments
+    pub fn _parse(&mut self, input: &str) -> Vec<String> {
+        let mut args = Vec::new(); // Vector to store the resulting args
+
+        let mut chars = input.trim().chars().peekable(); // Iterator to walk over
+        while let Some(ch) = chars.next() {
+            match ch {
+                '\'' => {
+                    if !self.in_double_quotes {
+                        self.in_single_quotes = !self.in_single_quotes;
+                    } else {
+                        self.word.push(ch);
+                    }
+                }
+                '"' => {
+                    if !self.in_single_quotes {
+                        self.in_double_quotes = !self.in_double_quotes;
+                    } else {
+                        self.word.push(ch);
+                    }
+                }
+                '\\' => {
+                    if self.in_single_quotes {
+                        self.word.push('\\');
+                    } else if self.in_double_quotes {
+                        if let Some(c) = chars.peek() {
+                            if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
+                                self.word.push(chars.next().unwrap());
+                            } else {
+                                self.word.push(c.clone());
+                            }
+                        }
+                    } else if !self.in_single_quotes && !self.in_double_quotes {
+                        if let Some(c) = chars.next() {
+                            self.word.push(c);
+                        }
+                    } else {
+                        self.word.push('\\');
+                    }
+                }
+                ' ' => {
+                    if !self.word.is_empty() {
+                        if !self.in_single_quotes && !self.in_double_quotes {
+                            args.push(self.word.clone());
+                            self.word.clear();
+                        } else {
+                            self.word.push(' ');
+                        }
+                    }
+                }
+                ch => self.word.push(ch),
+            }
+        }
+        if !self.word.is_empty() {
+            args.push(self.word.clone()); // Push any remaining word after the loop onto args
+        }
+
+        args
+    }
 }
 
 // -----
@@ -72,7 +90,7 @@ mod tests {
     #[test]
     fn test_parse_input() {
         let input = "command arg1 arg2";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -80,7 +98,7 @@ mod tests {
     #[test]
     fn test_parse_input_no_args() {
         let input = "command";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command"];
         assert_eq!(actual, expected);
     }
@@ -88,7 +106,7 @@ mod tests {
     #[test]
     fn test_parse_input_empty() {
         let input = "";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected: Vec<&str> = vec![];
         assert_eq!(actual, expected);
     }
@@ -96,7 +114,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_quoted_args() {
         let input = "command \"arg1 arg2\"";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1 arg2"];
         assert_eq!(actual, expected);
     }
@@ -104,7 +122,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_single_quoted_args() {
         let input = "command 'arg1 arg2'";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1 arg2"];
         assert_eq!(actual, expected);
     }
@@ -112,7 +130,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_mixed_quotes() {
         let input = "command \"arg1 'arg2'\"";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1 'arg2'"];
         assert_eq!(actual, expected);
     }
@@ -120,7 +138,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_escaped_quotes() {
         let input = "command \\\"arg1\\\" arg2";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "\"arg1\"", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -128,7 +146,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_multiple_spaces() {
         let input = "command    arg1     arg2";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -136,7 +154,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_trailing_spaces() {
         let input = "command arg1 arg2   ";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -144,7 +162,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_leading_spaces() {
         let input = "   command arg1 arg2";
-        let actual = parse::input(input);
+        let actual = parse::Parser::parse(input);
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
