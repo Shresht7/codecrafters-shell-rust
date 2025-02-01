@@ -46,16 +46,28 @@ impl Shell {
         let mut args = Vec::new(); // Vector to store the resulting args
 
         let mut word = String::new(); // Bucket to store the current word
-        let mut in_quotes = false; // Boolean indicating whether we are currently in an escaped string
+        let mut in_single_quotes = false; // Boolean indicating whether we are currently in a single-quoted string
+        let mut in_double_quotes = false; // Boolean indicating whether we are currently in a double-quoted string
         let mut chars = input.trim().chars(); // Iterator to walk over
         while let Some(ch) = chars.next() {
             match ch {
                 '\'' => {
-                    in_quotes = !in_quotes;
+                    if !in_double_quotes {
+                        in_single_quotes = !in_single_quotes;
+                    } else {
+                        word.push(ch);
+                    }
+                }
+                '"' => {
+                    if !in_single_quotes {
+                        in_double_quotes = !in_double_quotes;
+                    } else {
+                        word.push(ch);
+                    }
                 }
                 ' ' => {
                     if !word.is_empty() {
-                        if !in_quotes {
+                        if !in_single_quotes && !in_double_quotes {
                             args.push(word.clone());
                             word.clear();
                         } else {
@@ -66,7 +78,9 @@ impl Shell {
                 ch => word.push(ch),
             }
         }
-        args.push(word.clone()); // Push any remaining word after the loop onto args
+        if !word.is_empty() {
+            args.push(word.clone()); // Push any remaining word after the loop onto args
+        }
 
         args
     }
