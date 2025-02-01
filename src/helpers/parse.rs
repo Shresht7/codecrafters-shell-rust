@@ -25,57 +25,66 @@ impl Parser {
         let mut chars = input.trim().chars().peekable(); // Iterator to walk over
         while let Some(ch) = chars.next() {
             match ch {
-                '\'' => {
-                    if !self.in_double_quotes {
-                        self.in_single_quotes = !self.in_single_quotes;
-                    } else {
-                        self.word.push(ch);
-                    }
-                }
-                '"' => {
-                    if !self.in_single_quotes {
-                        self.in_double_quotes = !self.in_double_quotes;
-                    } else {
-                        self.word.push(ch);
-                    }
-                }
-                '\\' => {
-                    if self.in_single_quotes {
-                        self.word.push('\\');
-                    } else if self.in_double_quotes {
-                        if let Some(c) = chars.peek() {
-                            if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
-                                self.word.push(chars.next().unwrap());
-                            } else {
-                                self.word.push(c.clone());
-                            }
-                        }
-                    } else if !self.in_single_quotes && !self.in_double_quotes {
-                        if let Some(c) = chars.next() {
-                            self.word.push(c);
-                        }
-                    } else {
-                        self.word.push('\\');
-                    }
-                }
-                ' ' => {
-                    if !self.word.is_empty() {
-                        if !self.in_single_quotes && !self.in_double_quotes {
-                            args.push(self.word.clone());
-                            self.word.clear();
-                        } else {
-                            self.word.push(' ');
-                        }
-                    }
-                }
+                '\'' => self.handle_single_quote(ch),
+                '"' => self.handle_double_quotes(ch),
+                '\\' => self.handle_backslash(&mut chars),
+                ' ' => self.handle_space(&mut args),
                 ch => self.word.push(ch),
             }
         }
+
         if !self.word.is_empty() {
             args.push(self.word.clone()); // Push any remaining word after the loop onto args
         }
 
         args
+    }
+
+    fn handle_single_quote(&mut self, ch: char) {
+        if !self.in_double_quotes {
+            self.in_single_quotes = !self.in_single_quotes;
+        } else {
+            self.word.push(ch);
+        }
+    }
+
+    fn handle_double_quotes(&mut self, ch: char) {
+        if !self.in_single_quotes {
+            self.in_double_quotes = !self.in_double_quotes;
+        } else {
+            self.word.push(ch);
+        }
+    }
+
+    fn handle_backslash(&mut self, chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
+        if self.in_single_quotes {
+            self.word.push('\\');
+        } else if self.in_double_quotes {
+            if let Some(c) = chars.peek() {
+                if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
+                    self.word.push(chars.next().unwrap());
+                } else {
+                    self.word.push(c.clone());
+                }
+            }
+        } else if !self.in_single_quotes && !self.in_double_quotes {
+            if let Some(c) = chars.next() {
+                self.word.push(c);
+            }
+        } else {
+            self.word.push('\\');
+        }
+    }
+
+    fn handle_space(&mut self, args: &mut Vec<String>) {
+        if !self.word.is_empty() {
+            if !self.in_single_quotes && !self.in_double_quotes {
+                args.push(self.word.clone());
+                self.word.clear();
+            } else {
+                self.word.push(' ');
+            }
+        }
     }
 }
 
