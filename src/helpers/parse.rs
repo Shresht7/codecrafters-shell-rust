@@ -8,6 +8,20 @@ pub fn input(input: &str) -> Vec<String> {
     let mut chars = input.trim().chars().peekable(); // Iterator to walk over
     while let Some(ch) = chars.next() {
         match ch {
+            '\'' => {
+                if !in_double_quotes {
+                    in_single_quotes = !in_single_quotes;
+                } else {
+                    word.push(ch);
+                }
+            }
+            '"' => {
+                if !in_single_quotes {
+                    in_double_quotes = !in_double_quotes;
+                } else {
+                    word.push(ch);
+                }
+            }
             '\\' => {
                 if in_single_quotes {
                     word.push('\\');
@@ -25,20 +39,6 @@ pub fn input(input: &str) -> Vec<String> {
                     }
                 } else {
                     word.push('\\');
-                }
-            }
-            '\'' => {
-                if !in_double_quotes {
-                    in_single_quotes = !in_single_quotes;
-                } else {
-                    word.push(ch);
-                }
-            }
-            '"' => {
-                if !in_single_quotes {
-                    in_double_quotes = !in_double_quotes;
-                } else {
-                    word.push(ch);
                 }
             }
             ' ' => {
