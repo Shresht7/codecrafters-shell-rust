@@ -27,7 +27,7 @@ pub fn input(input: &str) -> Vec<String> {
                     word.push('\\');
                 } else if in_double_quotes {
                     if let Some(c) = chars.peek() {
-                        if c == &'\\' || c == &'$' || c == &'\n' {
+                        if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
                             word.push(chars.next().unwrap());
                         } else {
                             word.push(c.clone());
