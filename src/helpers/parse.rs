@@ -23,7 +23,9 @@ pub fn input(input: &str) -> Vec<String> {
                 }
             }
             '\\' => {
-                if !in_single_quotes && !in_double_quotes {
+                if in_single_quotes {
+                    word.push('\\');
+                } else if !in_single_quotes && !in_double_quotes {
                     if let Some(c) = chars.next() {
                         word.push(c);
                     }
