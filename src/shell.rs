@@ -1,5 +1,5 @@
 // Library
-use crate::commands::Command;
+use crate::{commands::Command, helpers::parse};
 use std::io::{self, Write};
 
 /// Struct that encapsulates the shell functionality
@@ -41,50 +41,6 @@ impl Shell {
         Ok(input) // Return the input
     }
 
-    /// Parses the input into a vector of arguments
-    fn parse_input(&mut self, input: &str) -> Vec<String> {
-        let mut args = Vec::new(); // Vector to store the resulting args
-
-        let mut word = String::new(); // Bucket to store the current word
-        let mut in_single_quotes = false; // Boolean indicating whether we are currently in a single-quoted string
-        let mut in_double_quotes = false; // Boolean indicating whether we are currently in a double-quoted string
-        let mut chars = input.trim().chars(); // Iterator to walk over
-        while let Some(ch) = chars.next() {
-            match ch {
-                '\'' => {
-                    if !in_double_quotes {
-                        in_single_quotes = !in_single_quotes;
-                    } else {
-                        word.push(ch);
-                    }
-                }
-                '"' => {
-                    if !in_single_quotes {
-                        in_double_quotes = !in_double_quotes;
-                    } else {
-                        word.push(ch);
-                    }
-                }
-                ' ' => {
-                    if !word.is_empty() {
-                        if !in_single_quotes && !in_double_quotes {
-                            args.push(word.clone());
-                            word.clear();
-                        } else {
-                            word.push(' ');
-                        }
-                    }
-                }
-                ch => word.push(ch),
-            }
-        }
-        if !word.is_empty() {
-            args.push(word.clone()); // Push any remaining word after the loop onto args
-        }
-
-        args
-    }
-
     /// Handles command execution
     fn execute_command(&mut self, args: Vec<String>) -> io::Result<()> {
         // Extract the command name from the vector
@@ -112,57 +68,10 @@ impl Shell {
             let input = self.read_input()?;
 
             // Split the input into a vector
-            let args = self.parse_input(&input);
+            let args = parse::input(&input);
 
             // Act on the command-name
             self.execute_command(args)?;
         }
-    }
-}
-
-// -----
-// TESTS
-// -----
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_input() {
-        let mut shell = Shell::default();
-        let input = "command arg1 arg2";
-        let actual = shell.parse_input(input);
-        let expected = vec!["command", "arg1", "arg2"];
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn test_parse_input_no_args() {
-        let mut shell = Shell::default();
-        let input = "command";
-        let actual = shell.parse_input(input);
-        let expected = vec!["command"];
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn test_parse_input_empty() {
-        let mut shell = Shell::default();
-        let input = "";
-        let actual = shell.parse_input(input);
-        let expected: Vec<&str> = vec![];
-        assert_eq!(actual, expected);
-    }
-
-    // TODO: Implement escaped quotes
-    #[test]
-    #[ignore = "Not implemented yet"]
-    fn test_parse_input_with_quoted_args() {
-        let mut shell = Shell::default();
-        let input = "command \"arg1 arg2\"";
-        let actual = shell.parse_input(input);
-        let expected = vec!["command", "arg1 arg2"];
-        assert_eq!(actual, expected);
     }
 }
