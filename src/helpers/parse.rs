@@ -175,4 +175,36 @@ mod tests {
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
+
+    #[test]
+    fn test_parse_input_with_escaped_backslash() {
+        let input = "command arg1 \\\\arg2";
+        let actual = parse::Parser::parse(input);
+        let expected = vec!["command", "arg1", "\\arg2"];
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_parse_input_with_nested_quotes() {
+        let input = "command \"arg1 'nested arg2'\"";
+        let actual = parse::Parser::parse(input);
+        let expected = vec!["command", "arg1 'nested arg2'"];
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_parse_input_with_unclosed_quotes() {
+        let input = "command \"arg1 arg2";
+        let actual = parse::Parser::parse(input);
+        let expected = vec!["command", "arg1 arg2"];
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_parse_input_with_special_characters() {
+        let input = "command arg1!@# arg2$%^";
+        let actual = parse::Parser::parse(input);
+        let expected = vec!["command", "arg1!@#", "arg2$%^"];
+        assert_eq!(actual, expected);
+    }
 }
