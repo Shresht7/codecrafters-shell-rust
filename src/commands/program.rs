@@ -32,7 +32,9 @@ impl super::ExecutableCommand for Program {
     /// Execute the program.
     fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         // Execute the program with the given arguments
-        let output = std::process::Command::new(&self.path)
+        let base_path = std::path::PathBuf::from(&self.path);
+        let base_path = base_path.file_name().unwrap();
+        let output = std::process::Command::new(base_path)
             .args(&args[1..])
             .output()?;
 
