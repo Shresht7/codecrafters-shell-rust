@@ -30,7 +30,7 @@ impl std::fmt::Display for Program {
 // Implement the `ExecutableCommand` trait for the `Program` struct.
 impl super::ExecutableCommand for Program {
     /// Execute the program.
-    fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         // Execute the program with the given arguments
         let output = std::process::Command::new(&self.path)
             .args(&args[1..])

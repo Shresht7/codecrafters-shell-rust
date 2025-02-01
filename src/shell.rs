@@ -42,12 +42,35 @@ impl Shell {
     }
 
     /// Parses the input into a vector of arguments
-    fn parse_input<'a>(&mut self, input: &'a str) -> Vec<&'a str> {
-        input.trim().split_whitespace().collect()
+    fn parse_input(&mut self, input: &str) -> Vec<String> {
+        let mut args = Vec::new(); // Vector to store the resulting args
+
+        let mut word = String::new(); // Bucket to store the current word
+        let mut in_quotes = false; // Boolean indicating whether we are currently in an escaped string
+        let mut chars = input.trim().chars(); // Iterator to walk over
+        while let Some(ch) = chars.next() {
+            match ch {
+                '\'' => {
+                    in_quotes = !in_quotes;
+                }
+                ' ' => {
+                    if !in_quotes {
+                        args.push(word.clone());
+                        word.clear();
+                    } else {
+                        word.push(' ');
+                    }
+                }
+                ch => word.push(ch),
+            }
+        }
+        args.push(word.clone()); // Push any remaining word after the loop onto args
+
+        args
     }
 
     /// Handles command execution
-    fn execute_command(&mut self, args: Vec<&str>) -> io::Result<()> {
+    fn execute_command(&mut self, args: Vec<String>) -> io::Result<()> {
         // Extract the command name from the vector
         if let Some(command) = args.get(0) {
             // Try to parse the command into a Command enum
@@ -73,7 +96,7 @@ impl Shell {
             let input = self.read_input()?;
 
             // Split the input into a vector
-            let args: Vec<&str> = self.parse_input(&input);
+            let args = self.parse_input(&input);
 
             // Act on the command-name
             self.execute_command(args)?;

@@ -27,7 +27,7 @@ use cd::CD;
 /// fn execute(&self, args: Vec<&str>) -> std::io::Result<()>;
 /// ```
 pub trait ExecutableCommand {
-    fn execute(&self, args: Vec<&str>) -> std::io::Result<()>;
+    fn execute(&self, args: Vec<String>) -> std::io::Result<()>;
 }
 
 /// A trait that defines the information about a command.
@@ -51,7 +51,7 @@ pub enum Command {
 // Provide an unified interface for executing commands.
 impl Command {
     /// Execute the command. This function will delegate the execution to the appropriate command.
-    pub fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
+    pub fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         match self {
             Command::Builtin(builtin) => builtin.execute(args),
             Command::Program(path) => path.execute(args),
@@ -91,7 +91,7 @@ pub enum Builtin {
 // Implement the Command trait for the Builtin commands
 impl ExecutableCommand for Builtin {
     /// Execute the built-in command
-    fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         match self {
             Builtin::Echo(cmd) => cmd.execute(args),
             Builtin::Exit(cmd) => cmd.execute(args),

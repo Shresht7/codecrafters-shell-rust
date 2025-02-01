@@ -43,7 +43,7 @@ impl super::ExecutableCommand for Echo {
     /// ```output
     /// Hello World!
     /// ```
-    fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         // Skip the first argument (the command name)
         let args = &args[1..];
 

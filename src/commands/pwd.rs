@@ -42,7 +42,7 @@ impl super::ExecutableCommand for PWD {
     /// ```output
     /// /path/to/current/directory
     /// ```
-    fn execute(&self, _args: Vec<&str>) -> std::io::Result<()> {
+    fn execute(&self, _args: Vec<String>) -> std::io::Result<()> {
         // Get the current working directory
         let cwd = std::env::current_dir()?;
 

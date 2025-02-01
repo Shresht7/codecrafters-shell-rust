@@ -116,6 +116,10 @@ e.g. `cd ./dir` and `cd ..`
 
 The `~` character is a shorthand for the home directory. Extend the `cd` utility to handle the `~` character.
 
+## Stage 13; Escaping Single Quotes
+
+- https://www.gnu.org/software/bash/manual/bash.html#Single-Quotes
+
 ---
 
 ## 📕 References

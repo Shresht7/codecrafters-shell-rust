@@ -41,7 +41,7 @@ impl super::ExecutableCommand for CD {
     /// ```sh
     /// $ cd /path/to/directory
     /// ```
-    fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         // Get the path from the arguments
         let path = match args.get(1) {
             Some(arg) => {

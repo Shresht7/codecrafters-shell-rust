@@ -37,7 +37,7 @@ impl super::ExecutableCommand for Exit {
     /// ```sh
     /// $ exit 0 # Exit the shell with a status code of 0
     /// ```
-    fn execute(&self, args: Vec<&str>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
         // Parse the exit code from the arguments
         let exit_code = if args.len() > 1 {
             args[1].parse::<i32>().unwrap_or(1) // Default to 1 if the exit code is invalid
