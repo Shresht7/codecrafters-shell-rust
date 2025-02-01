@@ -5,7 +5,7 @@ pub fn input(input: &str) -> Vec<String> {
     let mut word = String::new(); // Bucket to store the current word
     let mut in_single_quotes = false; // Boolean indicating whether we are currently in a single-quoted string
     let mut in_double_quotes = false; // Boolean indicating whether we are currently in a double-quoted string
-    let mut chars = input.trim().chars(); // Iterator to walk over
+    let mut chars = input.trim().chars().peekable(); // Iterator to walk over
     while let Some(ch) = chars.next() {
         match ch {
             '\'' => {
@@ -26,8 +26,12 @@ pub fn input(input: &str) -> Vec<String> {
                 if in_single_quotes {
                     word.push('\\');
                 } else if in_double_quotes {
-                    if let Some(c) = chars.next() {
-                        word.push(c);
+                    if let Some(c) = chars.peek() {
+                        if c == &'\\' || c == &'$' || c == &'\n' {
+                            word.push(c.clone());
+                        } else {
+                            word.push(ch);
+                        }
                     }
                 } else if !in_single_quotes && !in_double_quotes {
                     if let Some(c) = chars.next() {
