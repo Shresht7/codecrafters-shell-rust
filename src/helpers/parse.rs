@@ -28,9 +28,9 @@ pub fn input(input: &str) -> Vec<String> {
                 } else if in_double_quotes {
                     if let Some(c) = chars.peek() {
                         if c == &'\\' || c == &'$' || c == &'\n' {
-                            word.push(c.clone());
+                            word.push(chars.peek().unwrap().clone());
                         } else {
-                            word.push(ch);
+                            word.push(c.clone());
                         }
                     }
                 } else if !in_single_quotes && !in_double_quotes {
