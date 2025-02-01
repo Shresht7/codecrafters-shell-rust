@@ -64,7 +64,7 @@ impl Parser {
                 if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
                     self.word.push(chars.next().unwrap());
                 } else {
-                    self.word.push(c.clone());
+                    self.word.push('\\');
                 }
             }
         } else if !self.in_single_quotes && !self.in_double_quotes {
