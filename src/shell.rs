@@ -66,6 +66,10 @@ impl Shell {
 
             // Wait for user input and read it into a variable
             let input = self.read_input()?;
+            let input = input.trim();
+            if input.is_empty() {
+                continue; //Skip this iteration if input was empty
+            }
 
             // Split the input into a vector
             let args = parse::Parser::parse(&input)
