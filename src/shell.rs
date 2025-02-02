@@ -68,7 +68,8 @@ impl Shell {
             let input = self.read_input()?;
 
             // Split the input into a vector
-            let args = parse::Parser::parse(&input).unwrap();
+            let args = parse::Parser::parse(&input)
+                .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
             // Act on the command-name
             self.execute_command(args)?;
