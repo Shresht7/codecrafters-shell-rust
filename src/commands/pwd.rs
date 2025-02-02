@@ -47,7 +47,7 @@ impl super::ExecutableCommand for PWD {
         let cwd = std::env::current_dir()?;
 
         // Print the current working directory
-        writeln!(writer, "{}", cwd.display());
+        writeln!(writer, "{}", cwd.display())?;
 
         Ok(())
     }

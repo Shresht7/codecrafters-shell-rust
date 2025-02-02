@@ -43,16 +43,16 @@ impl super::ExecutableCommand for Type {
         if let Some(arg) = args.first() {
             match arg.parse::<super::Command>() {
                 Ok(super::Command::Builtin(_)) => {
-                    writeln!(writer, "{} is a shell builtin", arg);
+                    writeln!(writer, "{} is a shell builtin", arg)?;
                 }
                 Ok(super::Command::Program(path)) => {
-                    writeln!(writer, "{} is {}", arg, path);
+                    writeln!(writer, "{} is {}", arg, path)?;
                 }
                 Ok(super::Command::Unknown) => {
-                    writeln!(writer, "{}: not found", arg);
+                    writeln!(writer, "{}: not found", arg)?;
                 }
                 Err(_) => {
-                    writeln!(writer, "{} is not a valid command", arg);
+                    writeln!(writer, "{} is not a valid command", arg)?;
                 }
             }
         } else {

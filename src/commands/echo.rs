@@ -47,7 +47,7 @@ impl super::ExecutableCommand for Echo {
         // Skip the first argument (the command name)
         let args = &args[1..];
         // Print the arguments to the screen
-        writeln!(writer, "{}", args.join(" "));
+        writeln!(writer, "{}", args.join(" "))?;
         Ok(())
     }
 }
