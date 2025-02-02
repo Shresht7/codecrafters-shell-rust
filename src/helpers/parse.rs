@@ -141,7 +141,7 @@ fn extract_redirection(tokens: Vec<String>) -> (Vec<String>, Option<String>, Opt
     let mut i = 0;
     while i < tokens.len() {
         match tokens[i].as_str() {
-            ">" => {
+            ">" | "1>" => {
                 if i + 1 < tokens.len() {
                     stdout_target = Some(tokens[i + 1].clone());
                     i += 2; // Skip both the redirection operator and the filename.
