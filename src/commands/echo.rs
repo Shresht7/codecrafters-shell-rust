@@ -43,13 +43,11 @@ impl super::ExecutableCommand for Echo {
     /// ```output
     /// Hello World!
     /// ```
-    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         // Skip the first argument (the command name)
         let args = &args[1..];
-
         // Print the arguments to the screen
-        println!("{}", args.join(" "));
-
+        writeln!(writer, "{}", args.join(" "));
         Ok(())
     }
 }

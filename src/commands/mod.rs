@@ -22,12 +22,8 @@ use cd::CD;
 // --------
 
 /// A trait that defines a command that can be executed.
-/// These commands accept a [`vector`](Vec<&str>) of arguments and return a [`Result`](std::io::Result).
-/// ```rs
-/// fn execute(&self, args: Vec<&str>) -> std::io::Result<()>;
-/// ```
 pub trait ExecutableCommand {
-    fn execute(&self, args: Vec<String>) -> std::io::Result<()>;
+    fn execute(&self, args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()>;
 }
 
 /// A trait that defines the information about a command.
@@ -51,11 +47,15 @@ pub enum Command {
 // Provide an unified interface for executing commands.
 impl Command {
     /// Execute the command. This function will delegate the execution to the appropriate command.
-    pub fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
+    pub fn execute(
+        &self,
+        args: Vec<String>,
+        writer: &mut dyn std::io::Write,
+    ) -> std::io::Result<()> {
         match self {
-            Command::Builtin(builtin) => builtin.execute(args),
-            Command::Program(path) => path.execute(args),
-            Command::Unknown => Unknown.execute(args),
+            Command::Builtin(builtin) => builtin.execute(args, writer),
+            Command::Program(path) => path.execute(args, writer),
+            Command::Unknown => Unknown.execute(args, writer),
         }
     }
 }
@@ -91,13 +91,13 @@ pub enum Builtin {
 // Implement the Command trait for the Builtin commands
 impl ExecutableCommand for Builtin {
     /// Execute the built-in command
-    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         match self {
-            Builtin::Echo(cmd) => cmd.execute(args),
-            Builtin::Exit(cmd) => cmd.execute(args),
-            Builtin::Type(cmd) => cmd.execute(args),
-            Builtin::PWD(cmd) => cmd.execute(args),
-            Builtin::CD(cmd) => cmd.execute(args),
+            Builtin::Echo(cmd) => cmd.execute(args, writer),
+            Builtin::Exit(cmd) => cmd.execute(args, writer),
+            Builtin::Type(cmd) => cmd.execute(args, writer),
+            Builtin::PWD(cmd) => cmd.execute(args, writer),
+            Builtin::CD(cmd) => cmd.execute(args, writer),
         }
     }
 }

@@ -43,11 +43,18 @@ impl Shell {
 
     /// Handles command execution
     fn execute_command(&mut self, args: Vec<String>) -> io::Result<()> {
+        let (args, redirection_target) = self.parse_redirection(args);
+        let mut writer: Box<dyn std::io::Write> = if let Some(filename) = redirection_target {
+            Box::new(std::fs::File::create(filename)?)
+        } else {
+            Box::new(std::io::BufWriter::new(std::io::stdout()))
+        };
+
         // Extract the command name from the vector
         if let Some(command) = args.get(0) {
             // Try to parse the command into a Command enum
             return match command.parse::<Command>() {
-                Ok(cmd) => Ok(cmd.execute(args)?),
+                Ok(cmd) => Ok(cmd.execute(args, &mut writer)?),
                 Err(_) => Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     format!("Unexpected command! {command}"),
@@ -57,6 +64,17 @@ impl Shell {
         // If no command is provided, continue as if nothing happened
         // Since this is a shell repl, we don't want to error out if no command is provided
         Ok(()) // Return and continue on
+    }
+
+    // A simple function to check for redirection and split the arguments.
+    fn parse_redirection(&self, args: Vec<String>) -> (Vec<String>, Option<String>) {
+        if let Some(pos) = args.iter().position(|arg| arg == ">" || arg == "1>") {
+            let command_args = args[..pos].to_vec();
+            let target = args.get(pos + 1).cloned();
+            (command_args, target)
+        } else {
+            (args, None)
+        }
     }
 
     /// Handles the shell loop

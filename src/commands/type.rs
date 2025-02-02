@@ -35,7 +35,7 @@ impl super::ExecutableCommand for Type {
     /// ```output
     /// echo is a shell builtin
     /// ```
-    fn execute(&self, args: Vec<String>) -> std::io::Result<()> {
+    fn execute(&self, args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         // Skip the first argument (the command name)
         let args = &args[1..];
 
@@ -43,16 +43,16 @@ impl super::ExecutableCommand for Type {
         if let Some(arg) = args.first() {
             match arg.parse::<super::Command>() {
                 Ok(super::Command::Builtin(_)) => {
-                    println!("{} is a shell builtin", arg);
+                    writeln!(writer, "{} is a shell builtin", arg);
                 }
                 Ok(super::Command::Program(path)) => {
-                    println!("{} is {}", arg, path);
+                    writeln!(writer, "{} is {}", arg, path);
                 }
                 Ok(super::Command::Unknown) => {
-                    println!("{}: not found", arg);
+                    writeln!(writer, "{}: not found", arg);
                 }
                 Err(_) => {
-                    println!("{} is not a valid command", arg);
+                    writeln!(writer, "{} is not a valid command", arg);
                 }
             }
         } else {
