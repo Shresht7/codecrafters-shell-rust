@@ -1,21 +1,21 @@
 // Library
 use crate::{commands::Command, helpers::parse};
-use std::io::{self, Write};
+use std::io::{self, BufRead, Write};
 
 /// Struct that encapsulates the shell functionality
 pub struct Shell {
     /// The reader to read input from
-    reader: io::Stdin,
+    reader: io::BufReader<io::Stdin>,
     /// The writer to write output to
-    writer: io::Stdout,
+    writer: io::BufWriter<io::Stdout>,
 }
 
 // Default implementation for the Shell struct
 impl Default for Shell {
     fn default() -> Self {
         Shell {
-            reader: io::stdin(),
-            writer: io::stdout(),
+            reader: io::BufReader::new(io::stdin()),
+            writer: io::BufWriter::new(io::stdout()),
         }
     }
 }
