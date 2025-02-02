@@ -41,7 +41,15 @@ impl super::ExecutableCommand for CD {
     /// ```sh
     /// $ cd /path/to/directory
     /// ```
-    fn execute(&self, args: Vec<String>, _writer: &mut dyn std::io::Write) -> std::io::Result<()> {
+    fn execute<T>(
+        &self,
+        args: Vec<String>,
+        _writer: &mut T,
+        err_writer: &mut T,
+    ) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
         // Get the path from the arguments
         let path = match args.get(1) {
             Some(arg) => {
@@ -54,14 +62,14 @@ impl super::ExecutableCommand for CD {
                 }
             }
             None => {
-                eprintln!("cd: missing argument");
+                writeln!(err_writer, "cd: missing argument")?;
                 return Ok(());
             }
         };
 
         // Change the current working directory
         if let Err(_) = std::env::set_current_dir(&path) {
-            eprintln!("{}: No such file or directory", path.display());
+            writeln!(err_writer, "{}: No such file or directory", path.display())?;
         }
 
         Ok(())

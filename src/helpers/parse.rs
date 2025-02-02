@@ -35,7 +35,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses an input string into a vector of arguments, handling quotes and escapes.
-    pub fn parse(input: &str) -> Result<Vec<String>, String> {
+    pub fn parse(input: &str) -> Result<(Vec<String>, Option<String>, Option<String>), String> {
         let mut parser = Parser::new(input); // Initialize the parser
 
         // Iterate over the characters...
@@ -53,8 +53,10 @@ impl<'a> Parser<'a> {
             parser.args.push(parser.current);
         }
 
+        let (args, stdout_target, stderr_target) = extract_redirection(parser.args);
+
         // Return the resulting vector of arguments
-        Ok(parser.args)
+        Ok((args, stdout_target, stderr_target))
     }
 
     /// Handles a character in the Normal state.
@@ -125,6 +127,46 @@ impl<'a> Parser<'a> {
     }
 }
 
+// ----------------
+// HELPER FUNCTIONS
+// ----------------
+
+/// Given a vector of tokens, extracts redirection targets and returns a tuple:
+/// (remaining arguments, stdout target, stderr target)
+fn extract_redirection(tokens: Vec<String>) -> (Vec<String>, Option<String>, Option<String>) {
+    let mut args = Vec::new();
+    let mut stdout_target: Option<String> = None;
+    let mut stderr_target: Option<String> = None;
+
+    let mut i = 0;
+    while i < tokens.len() {
+        match tokens[i].as_str() {
+            ">" => {
+                if i + 1 < tokens.len() {
+                    stdout_target = Some(tokens[i + 1].clone());
+                    i += 2; // Skip both the redirection operator and the filename.
+                } else {
+                    // If there’s no filename, just break or decide how to handle the error.
+                    break;
+                }
+            }
+            "2>" => {
+                if i + 1 < tokens.len() {
+                    stderr_target = Some(tokens[i + 1].clone());
+                    i += 2;
+                } else {
+                    break;
+                }
+            }
+            _ => {
+                args.push(tokens[i].clone());
+                i += 1;
+            }
+        }
+    }
+    (args, stdout_target, stderr_target)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -134,7 +176,7 @@ mod tests {
         let input = "command arg1 arg2";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -142,7 +184,7 @@ mod tests {
         let input = "command";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -150,7 +192,7 @@ mod tests {
         let input = "";
         let actual = Parser::parse(input).unwrap();
         let expected: Vec<&str> = vec![];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -158,7 +200,7 @@ mod tests {
         let input = "command \"arg1 arg2\"";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -166,7 +208,7 @@ mod tests {
         let input = "command 'arg1 arg2'";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -174,7 +216,7 @@ mod tests {
         let input = "command \"arg1 'arg2'\"";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 'arg2'"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -182,7 +224,7 @@ mod tests {
         let input = "command \\\"arg1\\\" arg2";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "\"arg1\"", "arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -190,7 +232,7 @@ mod tests {
         let input = "command    arg1     arg2";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -198,7 +240,7 @@ mod tests {
         let input = "command arg1 arg2   ";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -206,7 +248,7 @@ mod tests {
         let input = "   command arg1 arg2";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -214,7 +256,7 @@ mod tests {
         let input = "command arg1 \\\\arg2";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "\\arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -222,7 +264,7 @@ mod tests {
         let input = "command \"arg1 'nested arg2'\"";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 'nested arg2'"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -231,7 +273,7 @@ mod tests {
         let actual = Parser::parse(input).unwrap();
         // In this implementation, unclosed quotes are accepted and treated as literal.
         let expected = vec!["command", "arg1 arg2"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
     }
 
     #[test]
@@ -239,6 +281,46 @@ mod tests {
         let input = "command arg1!@# arg2$%^";
         let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1!@#", "arg2$%^"];
-        assert_eq!(actual, expected);
+        assert_eq!(actual.0, expected);
+    }
+
+    #[test]
+    fn test_parse_redirection_with_both() {
+        let input = "ls -l > out.txt 2> err.txt";
+        let tokens: Vec<String> = input.split_whitespace().map(String::from).collect();
+        let (args, stdout_target, stderr_target) = extract_redirection(tokens);
+        assert_eq!(args, vec!["ls", "-l"]);
+        assert_eq!(stdout_target, Some("out.txt".to_string()));
+        assert_eq!(stderr_target, Some("err.txt".to_string()));
+    }
+
+    #[test]
+    fn test_parse_redirection_stdout_only() {
+        let input = "echo Hello World > output.txt";
+        let tokens: Vec<String> = input.split_whitespace().map(String::from).collect();
+        let (args, stdout_target, stderr_target) = extract_redirection(tokens);
+        assert_eq!(args, vec!["echo", "Hello", "World"]);
+        assert_eq!(stdout_target, Some("output.txt".to_string()));
+        assert_eq!(stderr_target, None);
+    }
+
+    #[test]
+    fn test_parse_redirection_stderr_only() {
+        let input = "grep foo file.txt 2> errors.log";
+        let tokens: Vec<String> = input.split_whitespace().map(String::from).collect();
+        let (args, stdout_target, stderr_target) = extract_redirection(tokens);
+        assert_eq!(args, vec!["grep", "foo", "file.txt"]);
+        assert_eq!(stdout_target, None);
+        assert_eq!(stderr_target, Some("errors.log".to_string()));
+    }
+
+    #[test]
+    fn test_parse_redirection_without_any() {
+        let input = "pwd";
+        let tokens: Vec<String> = input.split_whitespace().map(String::from).collect();
+        let (args, stdout_target, stderr_target) = extract_redirection(tokens);
+        assert_eq!(args, vec!["pwd"]);
+        assert_eq!(stdout_target, None);
+        assert_eq!(stderr_target, None);
     }
 }

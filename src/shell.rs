@@ -42,19 +42,33 @@ impl Shell {
     }
 
     /// Handles command execution
-    fn execute_command(&mut self, args: Vec<String>) -> io::Result<()> {
-        let (args, redirection_target) = self.parse_redirection(args);
-        let mut writer: Box<dyn std::io::Write> = if let Some(filename) = redirection_target {
-            Box::new(std::fs::File::create(filename)?)
+    fn execute_command(
+        &mut self,
+        args: Vec<String>,
+        out_target: Option<String>,
+        err_target: Option<String>,
+    ) -> io::Result<()> {
+        // Decide the writer for stdout.
+        let mut out_writer: Box<dyn Write> = if let Some(filename) = out_target {
+            let file = std::fs::File::create(filename)?;
+            Box::new(std::io::BufWriter::new(file))
         } else {
             Box::new(std::io::BufWriter::new(std::io::stdout()))
+        };
+
+        // Decide the writer for stderr.
+        let mut err_writer: Box<dyn Write> = if let Some(filename) = err_target {
+            let file = std::fs::File::create(filename)?;
+            Box::new(std::io::BufWriter::new(file))
+        } else {
+            Box::new(std::io::BufWriter::new(std::io::stderr()))
         };
 
         // Extract the command name from the vector
         if let Some(command) = args.get(0) {
             // Try to parse the command into a Command enum
             return match command.parse::<Command>() {
-                Ok(cmd) => Ok(cmd.execute(args, &mut writer)?),
+                Ok(cmd) => Ok(cmd.execute(args, &mut out_writer, &mut err_writer)?),
                 Err(_) => Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     format!("Unexpected command! {command}"),
@@ -64,17 +78,6 @@ impl Shell {
         // If no command is provided, continue as if nothing happened
         // Since this is a shell repl, we don't want to error out if no command is provided
         Ok(()) // Return and continue on
-    }
-
-    // A simple function to check for redirection and split the arguments.
-    fn parse_redirection(&self, args: Vec<String>) -> (Vec<String>, Option<String>) {
-        if let Some(pos) = args.iter().position(|arg| arg == ">" || arg == "1>") {
-            let command_args = args[..pos].to_vec();
-            let target = args.get(pos + 1).cloned();
-            (command_args, target)
-        } else {
-            (args, None)
-        }
     }
 
     /// Handles the shell loop
@@ -94,11 +97,11 @@ impl Shell {
             }
 
             // Split the input into a vector
-            let args = parse::Parser::parse(&input)
+            let (args, out_target, err_target) = parse::Parser::parse(&input)
                 .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
             // Act on the command-name
-            self.execute_command(args)?;
+            self.execute_command(args, out_target, err_target)?;
         }
     }
 }

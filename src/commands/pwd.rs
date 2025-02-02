@@ -42,12 +42,20 @@ impl super::ExecutableCommand for PWD {
     /// ```output
     /// /path/to/current/directory
     /// ```
-    fn execute(&self, _args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
+    fn execute<T>(
+        &self,
+        _args: Vec<String>,
+        out_writer: &mut T,
+        _err_writer: &mut T,
+    ) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
         // Get the current working directory
         let cwd = std::env::current_dir()?;
 
         // Print the current working directory
-        writeln!(writer, "{}", cwd.display())?;
+        writeln!(out_writer, "{}", cwd.display())?;
 
         Ok(())
     }

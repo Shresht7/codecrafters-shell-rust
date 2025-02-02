@@ -43,7 +43,15 @@ impl super::ExecutableCommand for Echo {
     /// ```output
     /// Hello World!
     /// ```
-    fn execute(&self, args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
+    fn execute<T>(
+        &self,
+        args: Vec<String>,
+        writer: &mut T,
+        _err_writer: &mut T,
+    ) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
         // Skip the first argument (the command name)
         let args = &args[1..];
         // Print the arguments to the screen

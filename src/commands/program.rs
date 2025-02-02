@@ -1,6 +1,3 @@
-// Library
-use std::io::Write;
-
 // -------
 // PROGRAM
 // -------
@@ -30,7 +27,15 @@ impl std::fmt::Display for Program {
 // Implement the `ExecutableCommand` trait for the `Program` struct.
 impl super::ExecutableCommand for Program {
     /// Execute the program.
-    fn execute(&self, args: Vec<String>, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
+    fn execute<T>(
+        &self,
+        args: Vec<String>,
+        out_writer: &mut T,
+        err_writer: &mut T,
+    ) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
         // Execute the program with the given arguments
         let base_path = std::path::PathBuf::from(&self.path);
         let base_path = base_path.file_name().unwrap();
@@ -39,9 +44,9 @@ impl super::ExecutableCommand for Program {
             .output()?;
 
         // Write the output to the standard output
-        writer.write_all(&output.stdout)?;
+        out_writer.write_all(&output.stdout)?;
         // Write the error output to the standard error
-        std::io::stderr().write_all(&output.stderr)?;
+        err_writer.write_all(&output.stderr)?;
 
         Ok(())
     }

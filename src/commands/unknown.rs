@@ -11,9 +11,17 @@ pub struct Unknown;
 // This will allow use to "execute" the `Unknown` command so that it satisfies the `ExecutableCommand` trait.
 impl super::ExecutableCommand for Unknown {
     /// Print an error message for unknown commands.
-    fn execute(&self, args: Vec<String>, _writer: &mut dyn std::io::Write) -> std::io::Result<()> {
+    fn execute<T>(
+        &self,
+        args: Vec<String>,
+        _out_writer: &mut T,
+        err_writer: &mut T,
+    ) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
         if let Some(command) = args.get(0) {
-            eprintln!("{}: command not found", command);
+            writeln!(err_writer, "{}: command not found", command)?;
         }
         Ok(())
     }

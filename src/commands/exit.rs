@@ -37,7 +37,15 @@ impl super::ExecutableCommand for Exit {
     /// ```sh
     /// $ exit 0 # Exit the shell with a status code of 0
     /// ```
-    fn execute(&self, args: Vec<String>, _writer: &mut dyn std::io::Write) -> std::io::Result<()> {
+    fn execute<T>(
+        &self,
+        args: Vec<String>,
+        _out_writer: &mut T,
+        _err_writer: &mut T,
+    ) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
         // Parse the exit code from the arguments
         let exit_code = if args.len() > 1 {
             args[1].parse::<i32>().unwrap_or(1) // Default to 1 if the exit code is invalid
