@@ -1,6 +1,5 @@
 // Library
-use std::env;
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 // ---------
 // HOME PATH
