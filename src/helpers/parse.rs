@@ -1,105 +1,138 @@
-pub struct Parser {
-    word: String,
-    in_single_quotes: bool,
-    in_double_quotes: bool,
+// Library
+use std::iter::Peekable;
+use std::str::Chars;
+
+/// Represents the various states the parser can be in
+#[derive(Debug)]
+enum ParseState {
+    Normal,
+    InSingleQuote,
+    InDoubleQuote,
 }
 
-impl Parser {
-    pub fn new() -> Parser {
+#[derive(Debug)]
+/// A `Parser` struct that holds the state and context for parsing operations.
+pub struct Parser<'a> {
+    /// A collection to store the resulting arguments
+    args: Vec<String>,
+    /// A string representing the current token being processed
+    current: String,
+    /// The current state of the parser, represented by the `ParseState` enum
+    state: ParseState,
+    /// An iterator over the characters of the input string, allowing for peeking at the next character
+    chars: Peekable<Chars<'a>>,
+}
+
+impl<'a> Parser<'a> {
+    /// Instantiate a new Parser with the initial conditions
+    fn new(input: &str) -> Parser {
         Parser {
-            word: String::new(),
-            in_single_quotes: false,
-            in_double_quotes: false,
+            args: Vec::new(),
+            current: String::new(),
+            state: ParseState::Normal,
+            chars: input.trim().chars().peekable(),
         }
     }
 
-    pub fn parse(input: &str) -> Vec<String> {
-        let mut p = Parser::new();
-        p._parse(input)
+    /// Parses an input string into a vector of arguments, handling quotes and escapes.
+    pub fn parse(input: &str) -> Result<Vec<String>, String> {
+        let mut parser = Parser::new(input); // Initialize the parser
+
+        // Iterate over the characters...
+        while let Some(ch) = parser.chars.next() {
+            parser.state = match parser.state {
+                ParseState::Normal => parser.handle_normal(ch)?,
+                ParseState::InSingleQuote => parser.handle_in_single_quote(ch),
+                ParseState::InDoubleQuote => parser.handle_in_double_quote(ch)?,
+            }
+            // Update the parser state, as necessary
+        }
+
+        // Once the iteration is complete, put any remaining tokens in current as the final argument
+        if !parser.current.is_empty() {
+            parser.args.push(parser.current);
+        }
+
+        // Return the resulting vector of arguments
+        Ok(parser.args)
     }
 
-    /// Parses the input into a vector of arguments
-    pub fn _parse(&mut self, input: &str) -> Vec<String> {
-        let mut args = Vec::new(); // Vector to store the resulting args
-
-        let mut chars = input.trim().chars().peekable(); // Iterator to walk over
-        while let Some(ch) = chars.next() {
-            match ch {
-                '\'' => self.handle_single_quote(ch),
-                '"' => self.handle_double_quotes(ch),
-                '\\' => self.handle_backslash(&mut chars),
-                ' ' => self.handle_space(&mut args),
-                ch => self.word.push(ch),
+    /// Handles a character in the Normal state.
+    /// Returns the new state after processing the character.
+    fn handle_normal(&mut self, ch: char) -> Result<ParseState, String> {
+        match ch {
+            '\\' => {
+                // Escape the next character if present.
+                if let Some(escaped) = self.chars.next() {
+                    self.current.push(escaped);
+                } else {
+                    return Err("Trailing backslash".into());
+                }
+                Ok(ParseState::Normal)
+            }
+            '\'' => Ok(ParseState::InSingleQuote),
+            '"' => Ok(ParseState::InDoubleQuote),
+            c if c.is_whitespace() => {
+                if !self.current.is_empty() {
+                    self.args.push(std::mem::take(&mut self.current));
+                }
+                Ok(ParseState::Normal)
+            }
+            _ => {
+                self.current.push(ch);
+                Ok(ParseState::Normal)
             }
         }
-
-        if !self.word.is_empty() {
-            args.push(self.word.clone()); // Push any remaining word after the loop onto args
-        }
-
-        args
     }
 
-    fn handle_single_quote(&mut self, ch: char) {
-        if !self.in_double_quotes {
-            self.in_single_quotes = !self.in_single_quotes;
+    /// Handles a character in the InSingleQuote state.
+    /// Returns the new state after processing the character.
+    fn handle_in_single_quote(&mut self, ch: char) -> ParseState {
+        if ch == '\'' {
+            ParseState::Normal
         } else {
-            self.word.push(ch);
+            self.current.push(ch);
+            ParseState::InSingleQuote
         }
     }
 
-    fn handle_double_quotes(&mut self, ch: char) {
-        if !self.in_single_quotes {
-            self.in_double_quotes = !self.in_double_quotes;
-        } else {
-            self.word.push(ch);
-        }
-    }
-
-    fn handle_backslash(&mut self, chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
-        if self.in_single_quotes {
-            self.word.push('\\');
-        } else if self.in_double_quotes {
-            if let Some(c) = chars.peek() {
-                if c == &'\\' || c == &'$' || c == &'\n' || c == &'"' {
-                    self.word.push(chars.next().unwrap());
+    /// Handles a character in the InDoubleQuote state.
+    /// Returns the new state after processing the character.
+    fn handle_in_double_quote(&mut self, ch: char) -> Result<ParseState, String> {
+        match ch {
+            '"' => Ok(ParseState::Normal),
+            '\\' => {
+                // Only escape certain characters within double quotes.
+                if let Some(&next_ch) = self.chars.peek() {
+                    match next_ch {
+                        '\\' | '"' | '$' | '\n' => {
+                            self.current.push(self.chars.next().unwrap());
+                        }
+                        _ => {
+                            self.current.push('\\');
+                        }
+                    }
+                    Ok(ParseState::InDoubleQuote)
                 } else {
-                    self.word.push('\\');
+                    Err("Trailing backslash in double quotes".into())
                 }
             }
-        } else if !self.in_single_quotes && !self.in_double_quotes {
-            if let Some(c) = chars.next() {
-                self.word.push(c);
-            }
-        } else {
-            self.word.push('\\');
-        }
-    }
-
-    fn handle_space(&mut self, args: &mut Vec<String>) {
-        if !self.word.is_empty() {
-            if !self.in_single_quotes && !self.in_double_quotes {
-                args.push(self.word.clone());
-                self.word.clear();
-            } else {
-                self.word.push(' ');
+            _ => {
+                self.current.push(ch);
+                Ok(ParseState::InDoubleQuote)
             }
         }
     }
 }
-
-// -----
-// TESTS
-// -----
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::parse;
+    use super::*;
 
     #[test]
     fn test_parse_input() {
         let input = "command arg1 arg2";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -107,7 +140,7 @@ mod tests {
     #[test]
     fn test_parse_input_no_args() {
         let input = "command";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command"];
         assert_eq!(actual, expected);
     }
@@ -115,7 +148,7 @@ mod tests {
     #[test]
     fn test_parse_input_empty() {
         let input = "";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected: Vec<&str> = vec![];
         assert_eq!(actual, expected);
     }
@@ -123,7 +156,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_quoted_args() {
         let input = "command \"arg1 arg2\"";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 arg2"];
         assert_eq!(actual, expected);
     }
@@ -131,7 +164,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_single_quoted_args() {
         let input = "command 'arg1 arg2'";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 arg2"];
         assert_eq!(actual, expected);
     }
@@ -139,7 +172,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_mixed_quotes() {
         let input = "command \"arg1 'arg2'\"";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 'arg2'"];
         assert_eq!(actual, expected);
     }
@@ -147,7 +180,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_escaped_quotes() {
         let input = "command \\\"arg1\\\" arg2";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "\"arg1\"", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -155,7 +188,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_multiple_spaces() {
         let input = "command    arg1     arg2";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -163,7 +196,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_trailing_spaces() {
         let input = "command arg1 arg2   ";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -171,7 +204,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_leading_spaces() {
         let input = "   command arg1 arg2";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "arg2"];
         assert_eq!(actual, expected);
     }
@@ -179,7 +212,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_escaped_backslash() {
         let input = "command arg1 \\\\arg2";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1", "\\arg2"];
         assert_eq!(actual, expected);
     }
@@ -187,7 +220,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_nested_quotes() {
         let input = "command \"arg1 'nested arg2'\"";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1 'nested arg2'"];
         assert_eq!(actual, expected);
     }
@@ -195,7 +228,8 @@ mod tests {
     #[test]
     fn test_parse_input_with_unclosed_quotes() {
         let input = "command \"arg1 arg2";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
+        // In this implementation, unclosed quotes are accepted and treated as literal.
         let expected = vec!["command", "arg1 arg2"];
         assert_eq!(actual, expected);
     }
@@ -203,7 +237,7 @@ mod tests {
     #[test]
     fn test_parse_input_with_special_characters() {
         let input = "command arg1!@# arg2$%^";
-        let actual = parse::Parser::parse(input);
+        let actual = Parser::parse(input).unwrap();
         let expected = vec!["command", "arg1!@#", "arg2$%^"];
         assert_eq!(actual, expected);
     }

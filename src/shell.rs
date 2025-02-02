@@ -68,7 +68,7 @@ impl Shell {
             let input = self.read_input()?;
 
             // Split the input into a vector
-            let args = parse::Parser::parse(&input);
+            let args = parse::Parser::parse(&input).unwrap();
 
             // Act on the command-name
             self.execute_command(args)?;
