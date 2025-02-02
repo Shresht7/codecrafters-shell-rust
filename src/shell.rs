@@ -46,9 +46,13 @@ impl Shell {
         // Extract the command name from the vector
         if let Some(command) = args.get(0) {
             // Try to parse the command into a Command enum
-            if let Ok(cmd) = command.parse::<Command>() {
-                cmd.execute(args)?; // Execute the command
-            }
+            return match command.parse::<Command>() {
+                Ok(cmd) => Ok(cmd.execute(args)?),
+                Err(_) => Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!("Unexpected command! {command}"),
+                )),
+            };
         }
         // If no command is provided, continue as if nothing happened
         // Since this is a shell repl, we don't want to error out if no command is provided
