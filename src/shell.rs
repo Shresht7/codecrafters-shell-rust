@@ -1,5 +1,5 @@
 // Library
-use crate::{commands::Command, helpers::parse};
+use crate::{commands::Command, parser::Parser};
 use std::io::{self, BufRead, Write};
 
 /// Struct that encapsulates the shell functionality
@@ -105,7 +105,7 @@ impl Shell {
             }
 
             // Split the input into a vector
-            let (args, out_target, err_target) = parse::Parser::parse(&input)
+            let (args, out_target, err_target) = Parser::parse(&input)
                 .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
             // Act on the command-name
