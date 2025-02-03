@@ -118,7 +118,7 @@ impl Shell {
 
                                 // Replace the buffer with the suggestion.
                                 buffer = suggestion.to_string();
-                                write!(self.writer, "{}", buffer)?;
+                                write!(self.writer, "{} ", buffer)?;
                                 self.writer.flush()?;
                             }
                         }
