@@ -16,6 +16,7 @@ pub struct Shell {
     reader: io::BufReader<io::Stdin>,
     /// The writer to write output to
     writer: io::BufWriter<io::Stdout>,
+    completions: Vec<&'static str>,
 }
 
 // Default implementation for the Shell struct
@@ -24,6 +25,7 @@ impl Default for Shell {
         Shell {
             reader: io::BufReader::new(io::stdin()),
             writer: io::BufWriter::new(io::stdout()),
+            completions: vec!["cd", "echo", "exit", "pwd", "type"],
         }
     }
 }
@@ -62,6 +64,7 @@ impl Shell {
                         } => {
                             break; // Exit the loop immediately
                         }
+
                         KeyEvent {
                             code: KeyCode::Char(c),
                             ..
@@ -71,6 +74,7 @@ impl Shell {
                             write!(self.writer, "{}", c)?;
                             self.writer.flush()?;
                         }
+
                         KeyEvent {
                             code: KeyCode::Backspace,
                             ..
@@ -85,6 +89,7 @@ impl Shell {
                                 self.writer.flush()?;
                             }
                         }
+
                         KeyEvent {
                             code: KeyCode::Enter,
                             ..
@@ -94,6 +99,30 @@ impl Shell {
                             self.writer.flush()?;
                             break;
                         }
+
+                        KeyEvent {
+                            code: KeyCode::Tab, ..
+                        } => {
+                            let prefix = buffer.as_str();
+
+                            if let Some(suggestion) =
+                                self.completions.iter().find(|cmd| cmd.starts_with(prefix))
+                            {
+                                // Erase the current buffer from the display.
+                                let len = buffer.len() as u16;
+                                self.writer.execute(cursor::MoveLeft(len))?;
+                                for _ in 0..len {
+                                    write!(self.writer, " ")?;
+                                }
+                                self.writer.execute(cursor::MoveLeft(len))?;
+
+                                // Replace the buffer with the suggestion.
+                                buffer = suggestion.to_string();
+                                write!(self.writer, "{}", buffer)?;
+                                self.writer.flush()?;
+                            }
+                        }
+
                         _ => {}
                     },
                     _ => {}
