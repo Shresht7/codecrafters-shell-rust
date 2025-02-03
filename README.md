@@ -182,6 +182,7 @@ The `2>>` operator is used to append the standard error of a command to a file.
 
 - https://www.gnu.org/software/bash/manual/bash.html
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
+- https://github.com/kkawakam/rustyline
 
 <!-- ----- -->
 <!-- LINKS -->
