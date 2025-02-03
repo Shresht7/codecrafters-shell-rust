@@ -49,6 +49,8 @@ impl Shell {
         let mut buffer = String::new(); // The buffer that represents the input
 
         terminal::enable_raw_mode()?; // Enable raw mode to override key input processing
+        self.writer.execute(cursor::Hide)?;
+
         loop {
             // Wait for a key event
             if event::poll(time::Duration::from_millis(100))? {
@@ -66,13 +68,20 @@ impl Shell {
                         }
 
                         KeyEvent {
-                            code: KeyCode::Char(c),
+                            code: KeyCode::Enter,
+                            ..
+                        }
+                        // Important: Looks like codecrafters use Ctrl+J to enter the line.
+                        // So, if this case isn't handled, all input pickup a trailing j causing everything to crash and burn
+                        | KeyEvent {
+                            code: KeyCode::Char('j'),
+                            modifiers: KeyModifiers::CONTROL,
                             ..
                         } => {
-                            // Append the character to our buffer.
-                            buffer.push(c);
-                            write!(self.writer, "{}", c)?;
+                            // On Enter, finish the line.
+                            writeln!(self.writer, "")?;
                             self.writer.flush()?;
+                            break;
                         }
 
                         KeyEvent {
@@ -88,16 +97,6 @@ impl Shell {
                                 self.writer.execute(cursor::MoveLeft(1))?;
                                 self.writer.flush()?;
                             }
-                        }
-
-                        KeyEvent {
-                            code: KeyCode::Enter,
-                            ..
-                        } => {
-                            // On Enter, finish the line.
-                            write!(self.writer, "\n")?;
-                            self.writer.flush()?;
-                            break;
                         }
 
                         KeyEvent {
@@ -117,10 +116,20 @@ impl Shell {
                                 self.writer.execute(cursor::MoveLeft(len))?;
 
                                 // Replace the buffer with the suggestion.
-                                buffer = suggestion.to_string() + " ";
-                                write!(self.writer, "{}", buffer)?;
+                                buffer = suggestion.to_string();
+                                write!(self.writer, "{} ", buffer)?;
                                 self.writer.flush()?;
                             }
+                        }
+
+                        KeyEvent {
+                            code: KeyCode::Char(c),
+                            ..
+                        } => {
+                            // Append the character to our buffer.
+                            buffer.push(c);
+                            write!(self.writer, "{}", c)?;
+                            self.writer.flush()?;
                         }
 
                         _ => {}
@@ -129,9 +138,10 @@ impl Shell {
                 }
             }
         }
+        self.writer.execute(cursor::Show)?;
         terminal::disable_raw_mode()?;
 
-        Ok(buffer.to_string())
+        Ok(buffer.trim().to_string())
     }
 
     /// Handles command execution
