@@ -1,6 +1,9 @@
 // Library
 use crate::{commands::Command, parser::Parser};
-use std::io::{self, BufRead, Write};
+use std::{fs, io};
+
+// Traits
+use std::io::{BufRead, Write};
 
 /// Struct that encapsulates the shell functionality
 pub struct Shell {
@@ -49,27 +52,27 @@ impl Shell {
         err_target: Option<(String, bool)>,
     ) -> io::Result<()> {
         // Decide the writer for stdout.
-        let mut out_writer: Box<dyn Write> = if let Some((filename, append)) = out_target {
-            let file = std::fs::OpenOptions::new()
+        let mut out_writer: Box<dyn io::Write> = if let Some((filename, append)) = out_target {
+            let file = fs::OpenOptions::new()
                 .write(true)
                 .append(append)
                 .create(true)
                 .open(filename)?;
-            Box::new(std::io::BufWriter::new(file))
+            Box::new(io::BufWriter::new(file))
         } else {
-            Box::new(std::io::BufWriter::new(std::io::stdout()))
+            Box::new(io::BufWriter::new(io::stdout()))
         };
 
         // Decide the writer for stderr.
-        let mut err_writer: Box<dyn Write> = if let Some((filename, append)) = err_target {
-            let file = std::fs::OpenOptions::new()
+        let mut err_writer: Box<dyn io::Write> = if let Some((filename, append)) = err_target {
+            let file = fs::OpenOptions::new()
                 .write(true)
                 .append(append)
                 .create(true)
                 .open(filename)?;
-            Box::new(std::io::BufWriter::new(file))
+            Box::new(io::BufWriter::new(file))
         } else {
-            Box::new(std::io::BufWriter::new(std::io::stderr()))
+            Box::new(io::BufWriter::new(io::stderr()))
         };
 
         // Extract the command name from the vector
