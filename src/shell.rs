@@ -8,12 +8,12 @@ use crossterm::{
 use std::{fs, io, time};
 
 // Traits
-use std::io::{BufRead, Write};
+use std::io::Write;
 
 /// Struct that encapsulates the shell functionality
 pub struct Shell {
     /// The reader to read input from
-    reader: io::BufReader<io::Stdin>,
+    // reader: io::BufReader<io::Stdin>,
     /// The writer to write output to
     writer: io::BufWriter<io::Stdout>,
     completions: Vec<&'static str>,
@@ -23,7 +23,7 @@ pub struct Shell {
 impl Default for Shell {
     fn default() -> Self {
         Shell {
-            reader: io::BufReader::new(io::stdin()),
+            // reader: io::BufReader::new(io::stdin()),
             writer: io::BufWriter::new(io::stdout()),
             completions: vec!["cd", "echo", "exit", "pwd", "type"],
         }
