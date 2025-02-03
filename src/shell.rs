@@ -1,6 +1,11 @@
 // Library
 use crate::{commands::Command, parser::Parser};
-use std::{fs, io};
+use crossterm::{
+    cursor,
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
+    terminal, ExecutableCommand,
+};
+use std::{fs, io, time};
 
 // Traits
 use std::io::{BufRead, Write};
@@ -39,9 +44,65 @@ impl Shell {
 
     /// Reads the user input from the command line
     fn read_input(&mut self) -> io::Result<String> {
-        let mut input = String::new(); // Create a string buffer to hold the input
-        self.reader.read_line(&mut input)?; // Read the input into the buffer
-        Ok(input) // Return the input
+        let mut buffer = String::new(); // The buffer that represents the input
+
+        terminal::enable_raw_mode()?; // Enable raw mode to override key input processing
+        loop {
+            // Wait for a key event
+            if event::poll(time::Duration::from_millis(100))? {
+                match event::read()? {
+                    Event::Key(evt) if evt.kind == KeyEventKind::Press => match evt {
+                        KeyEvent {
+                            code: KeyCode::Char('c'),
+                            modifiers: KeyModifiers::CONTROL,
+                            ..
+                        }
+                        | KeyEvent {
+                            code: KeyCode::Esc, ..
+                        } => {
+                            break; // Exit the loop immediately
+                        }
+                        KeyEvent {
+                            code: KeyCode::Char(c),
+                            ..
+                        } => {
+                            // Append the character to our buffer.
+                            buffer.push(c);
+                            write!(self.writer, "{}", c)?;
+                            self.writer.flush()?;
+                        }
+                        KeyEvent {
+                            code: KeyCode::Backspace,
+                            ..
+                        } => {
+                            if !buffer.is_empty() {
+                                // Remove the last character from the buffer.
+                                buffer.pop();
+                                // Move the cursor back, clear the character, and move back again.
+                                self.writer.execute(cursor::MoveLeft(1))?;
+                                write!(self.writer, " ")?;
+                                self.writer.execute(cursor::MoveLeft(1))?;
+                                self.writer.flush()?;
+                            }
+                        }
+                        KeyEvent {
+                            code: KeyCode::Enter,
+                            ..
+                        } => {
+                            // On Enter, finish the line.
+                            write!(self.writer, "\n")?;
+                            self.writer.flush()?;
+                            break;
+                        }
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+        }
+        terminal::disable_raw_mode()?;
+
+        Ok(buffer.to_string())
     }
 
     /// Handles command execution
