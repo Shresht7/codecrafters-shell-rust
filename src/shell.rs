@@ -117,8 +117,8 @@ impl Shell {
                                 self.writer.execute(cursor::MoveLeft(len))?;
 
                                 // Replace the buffer with the suggestion.
-                                buffer = suggestion.to_string();
-                                write!(self.writer, "{} ", buffer)?;
+                                buffer = suggestion.to_string() + " ";
+                                write!(self.writer, "{}", buffer)?;
                                 self.writer.flush()?;
                             }
                         }
