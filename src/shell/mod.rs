@@ -1,5 +1,7 @@
 use std::io;
 
+use readline::ReadLine;
+
 use crate::parser::Parser;
 
 mod executor;
@@ -12,16 +14,24 @@ pub struct Shell {
     // reader: io::BufReader<io::Stdin>,
     /// The writer to write output to
     writer: io::BufWriter<io::Stdout>,
-    completions: Vec<&'static str>,
+    readline: ReadLine,
 }
 
 // Default implementation for the Shell struct
 impl Default for Shell {
     fn default() -> Self {
+        let mut readline = ReadLine::default();
+        readline.with_completions(vec![
+            "cd".into(),
+            "echo".into(),
+            "exit".into(),
+            "pwd".into(),
+            "type".into(),
+        ]);
         Shell {
             // reader: io::BufReader::new(io::stdin()),
             writer: io::BufWriter::new(io::stdout()),
-            completions: vec!["cd", "echo", "exit", "pwd", "type"],
+            readline,
         }
     }
 }
@@ -38,7 +48,7 @@ impl Shell {
             self.render_prompt("$ ")?;
 
             // Wait for user input and read it into a variable
-            let input = self.read_input()?;
+            let input = self.readline.read()?;
             let input = input.trim();
             if input.is_empty() {
                 continue; //Skip this iteration if input was empty
