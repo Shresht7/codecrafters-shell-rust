@@ -127,6 +127,9 @@ impl super::Shell {
                 *buffer = suggestion.to_string() + " ";
                 write!(self.writer, "{}", buffer)?;
                 self.writer.flush()?;
+            } else {
+                write!(self.writer, "\x07")?; // If the tab-completion could not be performed, ring the bell 🔔!
+                self.writer.flush()?;
             },
         )
     }
