@@ -12,7 +12,7 @@ use crossterm::{
 pub(super) struct ReadLine {
     writer: BufWriter<io::Stdout>,
     poll_interval: time::Duration,
-    completions: Vec<String>,
+    completers: Vec<Box<dyn Completer>>,
 }
 
 impl Default for ReadLine {
@@ -20,14 +20,21 @@ impl Default for ReadLine {
         Self {
             writer: BufWriter::new(std::io::stdout()),
             poll_interval: time::Duration::from_millis(100),
-            completions: Vec::new(),
+            completers: Vec::new(),
         }
     }
 }
 
 impl ReadLine {
+    /// Register a new completer
+    pub fn register_completer(&mut self, completer: Box<dyn Completer>) -> &mut Self {
+        self.completers.push(completer);
+        self
+    }
+
+    /// Convenience Helper Function: Set a default completer from a list of strings
     pub fn with_completions(&mut self, completions: Vec<String>) -> &mut Self {
-        self.completions = completions;
+        self.register_completer(Box::new(DefaultCompleter::new(completions)));
         self
     }
 
@@ -151,26 +158,55 @@ impl ReadLine {
 
     /// Handles the `Tab` key and applies completions, if any
     fn handle_tab_completion(&mut self, buffer: &mut String) -> Result<(), std::io::Error> {
-        let prefix = buffer.as_str();
-        Ok(
-            if let Some(suggestion) = self.completions.iter().find(|cmd| cmd.starts_with(prefix)) {
-                // Erase the current buffer from the display.
-                let len = buffer.len() as u16;
-                self.writer.execute(cursor::MoveLeft(len))?;
-                for _ in 0..len {
-                    write!(self.writer, " ")?;
-                }
-                self.writer.execute(cursor::MoveLeft(len))?;
+        let mut suggestions = Vec::new();
+        for completer in &self.completers {
+            suggestions.extend(completer.complete(&buffer));
+        }
+        suggestions.sort();
+        suggestions.dedup();
 
-                // Replace the buffer with the suggestion.
-                *buffer = suggestion.to_string() + " ";
-                write!(self.writer, "{}", buffer)?;
-                self.writer.flush()?;
-            } else {
-                write!(self.writer, "\x07")?; // If the tab-completion could not be performed, ring the bell 🔔!
-                self.writer.flush()?;
-            },
-        )
+        if let Some(suggestion) = suggestions.first() {
+            let len = buffer.len() as u16;
+            self.writer.execute(cursor::Hide)?;
+            self.writer.execute(cursor::MoveLeft(len))?;
+            write!(self.writer, "{}", " ".repeat(len as usize))?;
+            self.writer.execute(cursor::MoveLeft(len))?;
+            *buffer = suggestion.to_string() + " ";
+            self.writer.execute(cursor::Show)?;
+            write!(self.writer, "{}", buffer)?;
+            self.writer.flush()?;
+        } else {
+            write!(self.writer, "\x07")?; // Bell sound if no completion
+            self.writer.flush()?;
+        }
+
+        Ok(())
+    }
+}
+
+/// A trait for generating completion suggestions based on current input
+pub trait Completer {
+    /// Returns a list of possible completions for the given input
+    fn complete(&self, input: &str) -> Vec<String>;
+}
+
+pub struct DefaultCompleter {
+    completions: Vec<String>,
+}
+
+impl DefaultCompleter {
+    pub fn new(completions: Vec<String>) -> Self {
+        DefaultCompleter { completions }
+    }
+}
+
+impl Completer for DefaultCompleter {
+    fn complete(&self, input: &str) -> Vec<String> {
+        self.completions
+            .iter()
+            .filter(|cmd| cmd.starts_with(input))
+            .cloned()
+            .collect()
     }
 }
 
