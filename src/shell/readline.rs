@@ -19,6 +19,8 @@ impl super::Shell {
             if event::poll(time::Duration::from_millis(100))? {
                 match event::read()? {
                     Event::Key(evt) if evt.kind == KeyEventKind::Press => match evt {
+
+                        // Exit on Ctrl+C or Esc
                         KeyEvent {
                             code: KeyCode::Char('c'),
                             modifiers: KeyModifiers::CONTROL,
@@ -30,6 +32,7 @@ impl super::Shell {
                             break; // Exit the loop immediately
                         }
 
+                        // Finish input on Enter or Ctrl+J
                         KeyEvent {
                             code: KeyCode::Enter,
                             ..
@@ -44,66 +47,88 @@ impl super::Shell {
                             // On Enter, finish the line.
                             writeln!(self.writer, "")?;
                             self.writer.flush()?;
+                            // TODO: Add the complete line to a history buffer
                             break;
                         }
 
+                        // Process backspace
                         KeyEvent {
                             code: KeyCode::Backspace,
                             ..
                         } => {
-                            if !buffer.is_empty() {
-                                // Remove the last character from the buffer.
-                                buffer.pop();
-                                // Move the cursor back, clear the character, and move back again.
-                                self.writer.execute(cursor::MoveLeft(1))?;
-                                write!(self.writer, " ")?;
-                                self.writer.execute(cursor::MoveLeft(1))?;
-                                self.writer.flush()?;
-                            }
+                            self.handle_backspace(&mut buffer)?;
                         }
 
+                        // Process Tab completion
                         KeyEvent {
                             code: KeyCode::Tab, ..
                         } => {
-                            let prefix = buffer.as_str();
-
-                            if let Some(suggestion) =
-                                self.completions.iter().find(|cmd| cmd.starts_with(prefix))
-                            {
-                                // Erase the current buffer from the display.
-                                let len = buffer.len() as u16;
-                                self.writer.execute(cursor::MoveLeft(len))?;
-                                for _ in 0..len {
-                                    write!(self.writer, " ")?;
-                                }
-                                self.writer.execute(cursor::MoveLeft(len))?;
-
-                                // Replace the buffer with the suggestion.
-                                buffer = suggestion.to_string();
-                                write!(self.writer, "{} ", buffer)?;
-                                self.writer.flush()?;
-                            }
+                            self.handle_tab_completion(&mut buffer)?;
                         }
 
+                        // Process any other character
                         KeyEvent {
                             code: KeyCode::Char(c),
                             ..
                         } => {
-                            // Append the character to our buffer.
-                            buffer.push(c);
-                            write!(self.writer, "{}", c)?;
-                            self.writer.flush()?;
+                            self.handle_character_input(&mut buffer, c)?;
                         }
 
-                        _ => {}
+                        _ => {} // Ignore other events
                     },
-                    _ => {}
+                    _ => {} // Ignore non-key events
                 }
             }
         }
         self.writer.execute(cursor::MoveToColumn(0))?; // Move the cursor back to the left-most column if it was ever displaced.
 
         Ok(buffer.trim().to_string())
+    }
+
+    /// Appends a character to the buffer and displays it to the screen
+    fn handle_character_input(
+        &mut self,
+        buffer: &mut String,
+        c: char,
+    ) -> Result<(), std::io::Error> {
+        buffer.push(c);
+        write!(self.writer, "{}", c)?;
+        self.writer.flush()?;
+        Ok(())
+    }
+
+    /// Handles the `backspace` key by removing the last character
+    fn handle_backspace(&mut self, buffer: &mut String) -> Result<(), std::io::Error> {
+        Ok(if !buffer.is_empty() {
+            // Remove the last character from the buffer.
+            buffer.pop();
+            // Move the cursor back, clear the character, and move back again.
+            self.writer.execute(cursor::MoveLeft(1))?;
+            write!(self.writer, " ")?;
+            self.writer.execute(cursor::MoveLeft(1))?;
+            self.writer.flush()?;
+        })
+    }
+
+    /// Handles the `Tab` key and applies completions, if any
+    fn handle_tab_completion(&mut self, buffer: &mut String) -> Result<(), std::io::Error> {
+        let prefix = buffer.as_str();
+        Ok(
+            if let Some(suggestion) = self.completions.iter().find(|cmd| cmd.starts_with(prefix)) {
+                // Erase the current buffer from the display.
+                let len = buffer.len() as u16;
+                self.writer.execute(cursor::MoveLeft(len))?;
+                for _ in 0..len {
+                    write!(self.writer, " ")?;
+                }
+                self.writer.execute(cursor::MoveLeft(len))?;
+
+                // Replace the buffer with the suggestion.
+                *buffer = suggestion.to_string();
+                write!(self.writer, "{} ", buffer)?;
+                self.writer.flush()?;
+            },
+        )
     }
 }
 
