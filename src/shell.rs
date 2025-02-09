@@ -138,6 +138,7 @@ impl Shell {
                 }
             }
         }
+        self.writer.execute(cursor::MoveToColumn(0))?; // Move the cursor back to the left-most column if it was ever displaced.
         self.writer.execute(cursor::Show)?;
         terminal::disable_raw_mode()?;
 
