@@ -13,7 +13,6 @@ impl super::Shell {
 
         // Enable terminal raw mode with our [RawModeGuard] that will automatically disable when it is dropped
         let _raw_mode = RawModeGuard::new()?;
-        self.writer.execute(cursor::Hide)?;
 
         loop {
             // Wait for a key event
@@ -103,7 +102,6 @@ impl super::Shell {
             }
         }
         self.writer.execute(cursor::MoveToColumn(0))?; // Move the cursor back to the left-most column if it was ever displaced.
-        self.writer.execute(cursor::Show)?;
 
         Ok(buffer.trim().to_string())
     }
