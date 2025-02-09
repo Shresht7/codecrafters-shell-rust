@@ -11,7 +11,8 @@ impl super::Shell {
     pub(super) fn read_input(&mut self) -> std::io::Result<String> {
         let mut buffer = String::new(); // The buffer that represents the input
 
-        terminal::enable_raw_mode()?; // Enable raw mode to override key input processing
+        // Enable terminal raw mode with our [RawModeGuard] that will automatically disable when it is dropped
+        let _raw_mode = RawModeGuard::new()?;
         self.writer.execute(cursor::Hide)?;
 
         loop {
@@ -103,8 +104,24 @@ impl super::Shell {
         }
         self.writer.execute(cursor::MoveToColumn(0))?; // Move the cursor back to the left-most column if it was ever displaced.
         self.writer.execute(cursor::Show)?;
-        terminal::disable_raw_mode()?;
 
         Ok(buffer.trim().to_string())
+    }
+}
+
+// RAII guard to enable raw mode and ensure that it's disabled on drop
+struct RawModeGuard;
+
+impl RawModeGuard {
+    fn new() -> std::io::Result<Self> {
+        terminal::enable_raw_mode()?;
+        Ok(Self)
+    }
+}
+
+impl Drop for RawModeGuard {
+    fn drop(&mut self) {
+        // Ensure raw mode is disabled (even on error) when the guard is dropped
+        let _ = terminal::disable_raw_mode();
     }
 }
