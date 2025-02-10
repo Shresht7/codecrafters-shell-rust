@@ -1,8 +1,8 @@
 use std::io;
 
-use readline::{PathCompleter, ReadLine};
+use readline::ReadLine;
 
-use crate::parser::Parser;
+use crate::{helpers, parser::Parser};
 
 mod executor;
 mod prompt;
@@ -28,7 +28,14 @@ impl Default for Shell {
             "pwd".into(),
             "type".into(),
         ]);
-        readline.register_completer(Box::new(PathCompleter {}));
+        let path_completions = helpers::path::get_executables()
+            .iter()
+            .filter_map(|p| {
+                p.file_name()
+                    .and_then(|x| Some(x.to_string_lossy().into_owned()))
+            })
+            .collect();
+        readline.with_completions(path_completions);
         Shell {
             // reader: io::BufReader::new(io::stdin()),
             writer: io::BufWriter::new(io::stdout()),

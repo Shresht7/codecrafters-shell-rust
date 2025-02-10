@@ -30,3 +30,21 @@ pub fn find_executable(name: &str) -> Option<String> {
     // Return `None` if no executable was found
     None
 }
+
+pub fn get_executables() -> Vec<PathBuf> {
+    let mut collection = Vec::new();
+
+    // Get the `PATH` environment variable
+    let path = env::var("PATH").expect("Failed to retrieve the PATH environment variable");
+
+    // Split the `PATH` environment variable into a list of paths
+    for dir in env::split_paths(&path) {
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for entry in entries.filter_map(Result::ok) {
+                collection.push(entry.path())
+            }
+        }
+    }
+
+    collection
+}

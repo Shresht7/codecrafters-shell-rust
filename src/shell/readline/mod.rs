@@ -1,7 +1,5 @@
 use std::{
-    env,
     io::{self, BufWriter, Write},
-    path::PathBuf,
     time,
 };
 
@@ -11,7 +9,10 @@ use crossterm::{
     ExecutableCommand,
 };
 
+mod completer;
 mod raw_mode;
+
+pub use completer::*;
 
 pub(super) struct ReadLine {
     writer: BufWriter<io::Stdout>,
@@ -224,62 +225,6 @@ impl ReadLine {
             }
         }
         Ok(())
-    }
-}
-
-/// A trait for generating completion suggestions based on current input
-pub trait Completer {
-    /// Returns a list of possible completions for the given input
-    fn complete(&self, input: &str) -> Vec<String>;
-}
-
-pub struct DefaultCompleter {
-    completions: Vec<String>,
-}
-
-impl DefaultCompleter {
-    pub fn new(completions: Vec<String>) -> Self {
-        DefaultCompleter { completions }
-    }
-}
-
-impl Completer for DefaultCompleter {
-    fn complete(&self, input: &str) -> Vec<String> {
-        self.completions
-            .iter()
-            .filter(|cmd| cmd.starts_with(input))
-            .cloned()
-            .collect()
-    }
-}
-
-pub struct PathCompleter {}
-
-impl Completer for PathCompleter {
-    fn complete(&self, input: &str) -> Vec<String> {
-        // Get the PATH environment variable.
-        let path = env::var("PATH").expect("Failed to retrieve the PATH environment variables");
-        // Split the PATH into individual directories.
-        let paths: Vec<PathBuf> = env::split_paths(&path).collect();
-        let mut suggestions = Vec::new();
-
-        // For each directory in PATH, try to read its contents.
-        for dir in paths {
-            if let Ok(entries) = std::fs::read_dir(&dir) {
-                // For each entry, get the file name and check if it starts with the input.
-                for entry in entries.filter_map(Result::ok) {
-                    let file_name_os = entry.file_name();
-                    let file_name = file_name_os.to_string_lossy();
-                    if file_name.starts_with(input) {
-                        suggestions.push(file_name.into_owned());
-                    }
-                }
-            }
-        }
-        // Sort and remove duplicates.
-        suggestions.sort();
-        suggestions.dedup();
-        suggestions
     }
 }
 
