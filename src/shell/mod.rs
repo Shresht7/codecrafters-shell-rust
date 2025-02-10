@@ -1,6 +1,6 @@
 use std::io;
 
-use readline::ReadLine;
+use readline::{PathCompleter, ReadLine};
 
 use crate::parser::Parser;
 
@@ -28,6 +28,7 @@ impl Default for Shell {
             "pwd".into(),
             "type".into(),
         ]);
+        readline.register_completer(Box::new(PathCompleter {}));
         Shell {
             // reader: io::BufReader::new(io::stdin()),
             writer: io::BufWriter::new(io::stdout()),
