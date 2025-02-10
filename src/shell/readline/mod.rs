@@ -8,8 +8,10 @@ use std::{
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
-    terminal, ExecutableCommand,
+    ExecutableCommand,
 };
+
+mod raw_mode;
 
 pub(super) struct ReadLine {
     writer: BufWriter<io::Stdout>,
@@ -45,8 +47,8 @@ impl ReadLine {
     pub(super) fn read(&mut self) -> std::io::Result<String> {
         let mut buffer = String::new(); // The buffer that represents the input
 
-        // Enable terminal raw mode with our [RawModeGuard] that will automatically disable when it is dropped
-        let _raw_mode = RawModeGuard::new()?;
+        // Enable terminal raw mode with our `RawModeGuard` that will automatically disable when it is dropped
+        let _raw_mode = raw_mode::RawModeGuard::new()?;
 
         loop {
             // Wait for a key-event
@@ -278,23 +280,6 @@ impl Completer for PathCompleter {
         suggestions.sort();
         suggestions.dedup();
         suggestions
-    }
-}
-
-// RAII guard to enable raw mode and ensure that it's disabled on drop
-struct RawModeGuard;
-
-impl RawModeGuard {
-    fn new() -> std::io::Result<Self> {
-        terminal::enable_raw_mode()?;
-        Ok(Self)
-    }
-}
-
-impl Drop for RawModeGuard {
-    fn drop(&mut self) {
-        // Ensure raw mode is disabled (even on error) when the guard is dropped
-        let _ = terminal::disable_raw_mode();
     }
 }
 
