@@ -15,6 +15,7 @@ pub(super) struct ReadLine {
     writer: BufWriter<io::Stdout>,
     poll_interval: time::Duration,
     completers: Vec<Box<dyn Completer>>,
+    tab_count: u8,
 }
 
 impl Default for ReadLine {
@@ -23,6 +24,7 @@ impl Default for ReadLine {
             writer: BufWriter::new(std::io::stdout()),
             poll_interval: time::Duration::from_millis(100),
             completers: Vec::new(),
+            tab_count: 0,
         }
     }
 }
@@ -166,6 +168,26 @@ impl ReadLine {
         }
         suggestions.sort();
         suggestions.dedup();
+
+        if suggestions.len() > 1 {
+            if self.tab_count == 0 {
+                write!(self.writer, "\x07")?; // Bell sound if no completion
+                self.writer.flush()?;
+                self.tab_count += 1;
+            } else {
+                writeln!(self.writer, "")?;
+                self.writer.execute(cursor::MoveToColumn(0))?;
+                for suggestion in &suggestions {
+                    write!(self.writer, "{}  ", suggestion)?;
+                }
+                writeln!(self.writer, "")?;
+                self.writer.execute(cursor::MoveToColumn(0))?;
+                write!(self.writer, "$ {}", buffer)?;
+                self.writer.flush()?;
+                self.tab_count = 0;
+            }
+            return Ok(());
+        }
 
         if let Some(suggestion) = suggestions.first() {
             let len = buffer.len() as u16;
