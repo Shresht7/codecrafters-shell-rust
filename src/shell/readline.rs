@@ -160,8 +160,13 @@ impl ReadLine {
         })
     }
 
-    /// Handles the `Tab` key and applies completions, if any
-    fn handle_tab_completion(&mut self, buffer: &mut String) -> Result<(), std::io::Error> {
+    /// Extended Tab-completion:
+    /// - If there is progress (the longest common prefix of suggestions is longer than current buffer),
+    ///   update the buffer.
+    /// - If not, on first Tab press, ring the bell.
+    /// - On second consecutive Tab press, print all suggestions.
+    fn handle_tab_completion(&mut self, buffer: &mut String) -> io::Result<()> {
+        // Aggregate suggestions from all completers.
         let mut suggestions = Vec::new();
         for completer in &self.completers {
             suggestions.extend(completer.complete(&buffer));
@@ -169,41 +174,53 @@ impl ReadLine {
         suggestions.sort();
         suggestions.dedup();
 
-        if suggestions.len() > 1 {
-            if self.tab_count == 0 {
-                write!(self.writer, "\x07")?; // Bell sound if no completion
-                self.writer.flush()?;
-                self.tab_count += 1;
+        if suggestions.is_empty() {
+            // No suggestions: ring the bell.
+            write!(self.writer, "\x07")?;
+            self.writer.flush()?;
+            self.tab_count = 0;
+            return Ok(());
+        }
+
+        // Compute longest common prefix (LCP) among suggestions.
+        let lcp = longest_common_prefix(&suggestions);
+
+        if lcp.len() > buffer.len() {
+            // There is progress; update buffer to LCP.
+            let len = buffer.len() as u16;
+            self.writer.execute(cursor::MoveLeft(len))?;
+            write!(self.writer, "{}", " ".repeat(len as usize))?;
+            self.writer.execute(cursor::MoveLeft(len))?;
+            if suggestions.len() > 1 {
+                *buffer = lcp;
             } else {
-                writeln!(self.writer, "")?;
+                *buffer = lcp + " ";
+            }
+            write!(self.writer, "{}", buffer)?;
+            self.writer.flush()?;
+            self.tab_count = 0;
+        } else {
+            // No progress: if multiple suggestions, use tab_count to decide.
+            self.tab_count += 1;
+            if self.tab_count == 1 {
+                // First Tab press: ring the bell.
+                write!(self.writer, "\x07")?;
+                self.writer.flush()?;
+            } else {
+                // Second consecutive Tab press: print all suggestions.
+                writeln!(self.writer)?;
                 self.writer.execute(cursor::MoveToColumn(0))?;
                 for suggestion in &suggestions {
                     write!(self.writer, "{}  ", suggestion)?;
                 }
-                writeln!(self.writer, "")?;
+                writeln!(self.writer)?;
                 self.writer.execute(cursor::MoveToColumn(0))?;
+                // Reprint the prompt with the current buffer (assumed prompt "$ ").
                 write!(self.writer, "$ {}", buffer)?;
                 self.writer.flush()?;
                 self.tab_count = 0;
             }
-            return Ok(());
         }
-
-        if let Some(suggestion) = suggestions.first() {
-            let len = buffer.len() as u16;
-            self.writer.execute(cursor::Hide)?;
-            self.writer.execute(cursor::MoveLeft(len))?;
-            write!(self.writer, "{}", " ".repeat(len as usize))?;
-            self.writer.execute(cursor::MoveLeft(len))?;
-            *buffer = suggestion.to_string() + " ";
-            self.writer.execute(cursor::Show)?;
-            write!(self.writer, "{}", buffer)?;
-            self.writer.flush()?;
-        } else {
-            write!(self.writer, "\x07")?; // Bell sound if no completion
-            self.writer.flush()?;
-        }
-
         Ok(())
     }
 }
@@ -279,4 +296,21 @@ impl Drop for RawModeGuard {
         // Ensure raw mode is disabled (even on error) when the guard is dropped
         let _ = terminal::disable_raw_mode();
     }
+}
+
+/// Helper function: returns the longest common prefix among the provided strings.
+fn longest_common_prefix(strings: &[String]) -> String {
+    if strings.is_empty() {
+        return String::new();
+    }
+    let mut prefix = strings[0].clone();
+    for s in strings.iter().skip(1) {
+        while !s.starts_with(&prefix) {
+            prefix.pop();
+            if prefix.is_empty() {
+                break;
+            }
+        }
+    }
+    prefix
 }
