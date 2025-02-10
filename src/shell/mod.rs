@@ -5,15 +5,10 @@ use readline::ReadLine;
 use crate::{helpers, parser::Parser};
 
 mod executor;
-mod prompt;
 mod readline;
 
 /// Struct that encapsulates the shell functionality
 pub struct Shell {
-    /// The reader to read input from
-    // reader: io::BufReader<io::Stdin>,
-    /// The writer to write output to
-    writer: io::BufWriter<io::Stdout>,
     readline: ReadLine,
 }
 
@@ -21,6 +16,7 @@ pub struct Shell {
 impl Default for Shell {
     fn default() -> Self {
         let mut readline = ReadLine::default();
+        readline.with_prompt("$ ");
         readline.with_completions(vec![
             "cd".into(),
             "echo".into(),
@@ -36,11 +32,7 @@ impl Default for Shell {
             })
             .collect();
         readline.with_completions(path_completions);
-        Shell {
-            // reader: io::BufReader::new(io::stdin()),
-            writer: io::BufWriter::new(io::stdout()),
-            readline,
-        }
+        Shell { readline }
     }
 }
 
@@ -52,10 +44,7 @@ impl Shell {
     /// until the user exits the shell.
     pub fn run(&mut self) -> io::Result<()> {
         loop {
-            // Render the prompt to the screen
-            self.render_prompt("$ ")?;
-
-            // Wait for user input and read it into a variable
+            // Render the prompt and wait for user input
             let input = self.readline.read()?;
             let input = input.trim();
             if input.is_empty() {
