@@ -17,6 +17,7 @@ pub use completer::*;
 
 pub(super) struct ReadLine {
     prompt: String,
+    buffer: String,
     completers: Vec<Box<dyn Completer>>,
     tab_count: u8,
     writer: BufWriter<io::Stdout>,
@@ -27,6 +28,7 @@ impl Default for ReadLine {
     fn default() -> Self {
         Self {
             prompt: String::from("$ "),
+            buffer: String::new(),
             completers: Vec::new(),
             tab_count: 0,
             poll_interval: time::Duration::from_millis(100),
@@ -63,8 +65,6 @@ impl ReadLine {
 
     /// Read the next line the user inputs
     pub(super) fn read(&mut self) -> std::io::Result<String> {
-        let mut buffer = String::new(); // The buffer that represents the input
-
         // Enable terminal raw mode with our `RawModeGuard` that will automatically disable when it is dropped
         let _raw_mode = raw_mode::RawModeGuard::new()?;
 
@@ -77,7 +77,7 @@ impl ReadLine {
                 match event::read()? {
                     // Only check for key-presses to prevent double-trigger on both press and release
                     Event::Key(evt) if evt.kind == KeyEventKind::Press => {
-                        let done = self.handle_key_press(evt, &mut buffer)?;
+                        let done = self.handle_key_press(evt)?;
                         if done {
                             break; // If we are done processing the line, then exit the loop and continue onwards!
                         }
@@ -90,6 +90,8 @@ impl ReadLine {
         // Move the cursor back to the left-most column if it somehow ends up in a weird place.
         self.writer.execute(cursor::MoveToColumn(0))?;
 
-        Ok(buffer)
+        let result = self.buffer.clone();
+        self.buffer.clear();
+        Ok(result)
     }
 }

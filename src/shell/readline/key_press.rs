@@ -7,11 +7,7 @@ use crossterm::{
 };
 
 impl super::ReadLine {
-    pub(super) fn handle_key_press(
-        &mut self,
-        evt: KeyEvent,
-        mut buffer: &mut String,
-    ) -> std::io::Result<bool> {
+    pub(super) fn handle_key_press(&mut self, evt: KeyEvent) -> std::io::Result<bool> {
         match evt {
             // Exit on Ctrl+C or Esc
             KeyEvent {
@@ -49,14 +45,14 @@ impl super::ReadLine {
                 code: KeyCode::Backspace,
                 ..
             } => {
-                self.handle_backspace(&mut buffer)?;
+                self.handle_backspace()?;
             }
 
             // Process Tab completion
             KeyEvent {
                 code: KeyCode::Tab, ..
             } => {
-                self.handle_tab_completion(&mut buffer)?;
+                self.handle_tab_completion()?;
             }
 
             // Process any other character
@@ -64,7 +60,7 @@ impl super::ReadLine {
                 code: KeyCode::Char(c),
                 ..
             } => {
-                self.handle_character_input(&mut buffer, c)?;
+                self.handle_character_input(c)?;
             }
 
             _ => {} // Ignore other events
@@ -74,22 +70,18 @@ impl super::ReadLine {
     }
 
     /// Appends a character to the buffer and displays it to the screen
-    fn handle_character_input(
-        &mut self,
-        buffer: &mut String,
-        c: char,
-    ) -> Result<(), std::io::Error> {
-        buffer.push(c);
+    fn handle_character_input(&mut self, c: char) -> Result<(), std::io::Error> {
+        self.buffer.push(c);
         write!(self.writer, "{}", c)?;
         self.writer.flush()?;
         Ok(())
     }
 
     /// Handles the `backspace` key by removing the last character
-    fn handle_backspace(&mut self, buffer: &mut String) -> Result<(), std::io::Error> {
-        Ok(if !buffer.is_empty() {
+    fn handle_backspace(&mut self) -> Result<(), std::io::Error> {
+        Ok(if !self.buffer.is_empty() {
             // Remove the last character from the buffer.
-            buffer.pop();
+            self.buffer.pop();
             // Move the cursor back, clear the character, and move back again.
             self.writer.execute(cursor::MoveLeft(1))?;
             write!(self.writer, " ")?;
@@ -103,11 +95,11 @@ impl super::ReadLine {
     ///   update the buffer.
     /// - If not, on first Tab press, ring the bell.
     /// - On second consecutive Tab press, print all suggestions.
-    fn handle_tab_completion(&mut self, buffer: &mut String) -> std::io::Result<()> {
+    fn handle_tab_completion(&mut self) -> std::io::Result<()> {
         // Aggregate suggestions from all completers.
         let mut suggestions = Vec::new();
         for completer in &self.completers {
-            suggestions.extend(completer.complete(&buffer));
+            suggestions.extend(completer.complete(&self.buffer));
         }
         suggestions.sort();
         suggestions.dedup();
@@ -123,18 +115,18 @@ impl super::ReadLine {
         // Compute longest common prefix (LCP) among suggestions.
         let lcp = longest_common_prefix(&suggestions);
 
-        if lcp.len() > buffer.len() {
+        if lcp.len() > self.buffer.len() {
             // There is progress; update buffer to LCP.
-            let len = buffer.len() as u16;
+            let len = self.buffer.len() as u16;
             self.writer.execute(cursor::MoveLeft(len))?;
             write!(self.writer, "{}", " ".repeat(len as usize))?;
             self.writer.execute(cursor::MoveLeft(len))?;
             if suggestions.len() > 1 {
-                *buffer = lcp;
+                self.buffer = lcp;
             } else {
-                *buffer = lcp + " ";
+                self.buffer = lcp + " ";
             }
-            write!(self.writer, "{}", buffer)?;
+            write!(self.writer, "{}", self.buffer)?;
             self.writer.flush()?;
             self.tab_count = 0;
         } else {
@@ -154,7 +146,7 @@ impl super::ReadLine {
                 writeln!(self.writer)?;
                 self.writer.execute(cursor::MoveToColumn(0))?;
                 // Reprint the prompt with the current buffer (assumed prompt "$ ").
-                write!(self.writer, "$ {}", buffer)?;
+                write!(self.writer, "$ {}", self.buffer)?;
                 self.writer.flush()?;
                 self.tab_count = 0;
             }
