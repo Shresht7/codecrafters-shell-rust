@@ -16,14 +16,14 @@ pub struct Shell {
 impl Default for Shell {
     fn default() -> Self {
         let mut readline = ReadLine::default();
-        readline.with_prompt("$ ");
-        readline.with_completions(vec![
+
+        let builtin_completions: Vec<String> = vec![
             "cd".into(),
             "echo".into(),
             "exit".into(),
             "pwd".into(),
             "type".into(),
-        ]);
+        ];
         let path_completions = helpers::path::get_executables()
             .iter()
             .filter_map(|p| {
@@ -31,7 +31,11 @@ impl Default for Shell {
                     .and_then(|x| Some(x.to_string_lossy().into_owned()))
             })
             .collect();
-        readline.with_completions(path_completions);
+
+        readline
+            .with_prompt("$ ")
+            .with_completions(builtin_completions)
+            .with_completions(path_completions);
         Shell { readline }
     }
 }
