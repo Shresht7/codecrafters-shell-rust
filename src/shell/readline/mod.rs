@@ -1,5 +1,5 @@
 use std::{
-    io::{self, BufWriter, Write},
+    io::{BufWriter, Write},
     time,
 };
 
@@ -20,7 +20,7 @@ pub(super) struct ReadLine {
     buffer: String,
     completers: Vec<Box<dyn Completer>>,
     tab_count: u8,
-    writer: BufWriter<io::Stdout>,
+    writer: BufWriter<std::io::Stdout>,
     poll_interval: time::Duration,
 }
 
@@ -62,7 +62,13 @@ impl ReadLine {
         self.register_completer(Box::new(DefaultCompleter::new(completions)));
         self
     }
+}
 
+// ----
+// READ
+// ----
+
+impl ReadLine {
     /// Read the next line the user inputs
     pub(super) fn read(&mut self) -> std::io::Result<String> {
         // Enable terminal raw mode with our `RawModeGuard` that will automatically disable when it is dropped
@@ -90,6 +96,7 @@ impl ReadLine {
         // Move the cursor back to the left-most column if it somehow ends up in a weird place.
         self.writer.execute(cursor::MoveToColumn(0))?;
 
+        // Clear the buffer and return the results
         let result = self.buffer.clone();
         self.buffer.clear();
         Ok(result)
