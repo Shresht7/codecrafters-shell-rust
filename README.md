@@ -18,25 +18,21 @@ This is a Rust solution to the
 
 ### Stage 1: Print a prompt
 
-We print a shell prompt (`$ `) and wait for the user's input.
+Print a shell prompt (`$ `) and wait for the user's input.
 
 ### Stage 2: Handle Missing Commands
 
-We handle the case where the user enters a command that doesn't exist (which right now, is every command!). We print an error message and continue to wait for the user's input instead of letting the shell crash.
+Handle the case where the user enters a command that doesn't exist (which right now, is every command!). We print an error message and continue to wait for the user's input instead of letting the shell crash.
 
 ### Stage 3: REPL (Read-Eval-Print Loop)
 
 A REPL is an interactive loop that reads user input, evaluates it, prints the result, and then waits for the next input.
-
-#### 📕 References
 
 - https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop
 
 ### Stage 4: Exit Command
 
 The `exit` command causes the shell to exit. It returns an integer exit code. An exit code of `0` indicates success, and any other value indicates an error.
-
-#### 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#exit
 - https://en.wikipedia.org/wiki/Exit_status
@@ -45,15 +41,11 @@ The `exit` command causes the shell to exit. It returns an integer exit code. An
 
 The `echo` utility writes its arguments to standard output, followed by a `<newline>`. If there are no arguments, only the `<newline>` is written.
 
-#### 📕 References
-
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/echo.html
 
 ### Stage 6: Type Command
 
 The `type` builtin command is used to identify how a command name is interpreted by the shell. It returns whether the command is a shell builtin or an unknown command.
-
-#### 📕 References
 
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/type.html
 
@@ -63,8 +55,6 @@ Extend the `type` builtin command to identify executable programs (using the `PA
 
 > [!NOTE]
 > [`PATH`][PATH] is an environment-variable that specifies the set of directories where executable programs are located.
-
-#### 📕 References
 
 - [Wikipedia: PATH (variable)][PATH]
 
@@ -79,8 +69,6 @@ Implement the ability to run external programs. The shell should be able to run 
 ### Stage 9: PWD Command
 
 The `pwd` utility writes the absolute pathname of the current working directory to the standard output.
-
-#### 📕 References
 
 - https://en.wikipedia.org/wiki/Pwd
 - https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html
@@ -175,6 +163,30 @@ The `2>>` operator is used to append the standard error of a command to a file.
 ---
 
 ## Autocompletion
+
+### Stage 23: Builtin Completion
+
+Implement support for autocompleting builtin commands. The shell should be able to complete builtin commands when the user presses the <kbd>Tab</kbd> key.
+
+### Stage 24: Completion with arguments
+
+Extend the shell's tab completion to handle commands with arguments. The shell should not only complete the command itself but also correctly handle the subsequent arguments that the user types. This means that that after completing the command with <kbd>Tab</kbd> key it should allow the user to continue typing arguments, and those arguments should also be interpreted correctly.
+
+### Stage 25: Missing Completions
+
+Refine shell's tab completion behaviour to handle cases where the user types an invalid command. When the user types a command that is not a known builtin, the shell should not attempt to autocomplete it. Instead it should just keep what the user typed and should ring a bell.
+
+### Stage 26: Executable Completions
+
+Extend the shell's autocomplete to include external executable files in the user's `PATH`. The shell should be able to complete commands that are not builtins, but exist as executable files in the directories listed in the `PATH` environment variable.
+
+### Stage 27: Multiple Completions
+
+Implement tab-completion for executables, specifically when multiple executables share a common prefix.
+
+### Stage 28: Partial Completions
+
+Extend the shell's tab completion to handle cases with multiple matching executables where one is a prefix of another.
 
 ---
 
